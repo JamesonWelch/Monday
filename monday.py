@@ -61,7 +61,10 @@ def monday_speak(audio_string):
 def respond(voice_data):
     if there_exists(['search Google for']):
         query = voice_data.split('search for')[1]
-        search(query)
+        bsearch(query, google=True)
+    if there_exists(['open url']):
+        query = voice_data.split('open url')[1]
+        bsearch(query, url=True)
     if there_exists(['update remote repository']):
         update_remote_repository(voice_data)
     if there_exists(['development environment', 'begin work session', 'begin work day']):
@@ -92,10 +95,16 @@ def respond(voice_data):
     if there_exists(['shut down', 'exit', 'power down', 'initiate shut down']):
         shutdown()
 
-def search(query):
-    monday_speak(f'Searching Google for {query}')
-    google_url = f'https://www.google.com/search?q={query}'
-    webbrowser.get().open(google_url)
+def bsearch(query, google=False, url=False):
+    if google == True:
+        monday_speak(f'Searching Google for {query}')
+        google_url = f'https://www.google.com/search?q={query}'
+        webbrowser.get().open(google_url)
+    if url == True:
+        monday_speak(f'Opening browser for {query}')
+        url = f'https://www.{query.strip()}'
+        webbrowser.get().open(url)
+
 
 def archive_contract(*args, **kwargs):
     """Final tear down of completed contract"""
