@@ -21,3 +21,9 @@ def send_file_to_home_server():
 
 def update_remote_repository():
     pass
+
+def access_config_file():
+    """ Access the settings like HOME SERVER so that only this file needs to be
+        changed in the event of a move or hardware/software revamp 
+        e.g. Local/Public IP, SSH config, Home Server connection settings
+    """
