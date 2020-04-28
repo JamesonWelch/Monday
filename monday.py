@@ -111,10 +111,12 @@ def send_file_to_home_server():
     pass
 
 def update_remote_repository(voice_data):
-    m = voice_data.split('message')[1].split('branch')[0]
-    monday_speak(f'Message: {m}')
-    branch = voice_data.split('branch')[1]
-    monday_speak(f'Branch: {branch}')
+    if 'message' in voice_data:
+        m = voice_data.split('message')[1].split('branch')[0]
+        monday_speak(f'Message: {m}')
+    if 'branch' in voice_data:
+        branch = voice_data.split('branch')[1]
+        monday_speak(f'Branch: {branch}')
     monday_speak('Updating remote repository.')
     os.system('git add monday.py')
     os.system('git commit -m "{m}"')
