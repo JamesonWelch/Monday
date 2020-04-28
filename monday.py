@@ -65,7 +65,10 @@ def respond(voice_data):
         query = voice_data.split('open url')[1]
         bsearch(query, url=True)
     if there_exists(['update remote repository']):
-        update_remote_repository(voice_data)
+        if 'with all files' in voice_data:
+            update_remote_repository(voice_data, all=True)
+        else:
+            update_remote_repository(voice_data)
     if there_exists(['development environment', 'begin work session', 'begin work day']):
         initialize_development_environment()
     
@@ -101,6 +104,13 @@ def respond(voice_data):
     # Monday program functions & program routines #
     ###############################################
 
+    if there_exists(['open']):
+        program = voice_data.split('open')[1]
+        open_program(program)
+
+    # Monday program functions & program routines #
+    ###############################################
+
     if there_exists(['update your dependencies file']):
         update_dependancies_file()
     if there_exists(['shut down', 'exit', 'power down', 'initiate shut down']):
@@ -126,6 +136,11 @@ def bsearch(query, google=False, url=False):
         url = f'https://www.{query.strip()}'
         webbrowser.get().open(url)
         monday_speak(f'Opening browser for {query}')
+
+def open_program(program):
+    monday_speak(f'Opening {program}')
+    prog = program.capitalize()
+    os.system(f'open /System/Applications/Utilities/{prog}.app')
 
 def task_list():
     '''
@@ -160,7 +175,7 @@ def initialize_development_environment():
 def send_file_to_home_server():
     pass
 
-def update_remote_repository(voice_data):
+def update_remote_repository(voice_data, all=False):
     if 'message' in voice_data:
         m = voice_data.split('message')[1].split('branch')[0]
         monday_speak(f'Message: {m}')
@@ -172,7 +187,10 @@ def update_remote_repository(voice_data):
     else: 
         branch = 'master'
     monday_speak('Updating remote repository.')
-    os.system('git add monday.py')
+    if all == True:
+        os.system('git add .')
+    else:
+        os.system('git add monday.py')
     os.system(f'git commit -m "{m}"')
     os.system(f'git push origin {branch}')
     monday_speak('Done')
@@ -225,8 +243,9 @@ def shutdown():
         if '.mp3' in f:
             os.remove(f)
     monday_speak('Archiving logs.')
-    monday_speak('Good day user.')
-    os.system('exit')
+    monday_speak('Good day.')
+    monday_active = False
+    exit()
 
 
 def update_dependancies_file():
@@ -238,6 +257,7 @@ siri_pw = 'zz@ae.q$pNE{(2DS'
 
 time.sleep(1)
 
-while 1:
+monday_active = True
+while monday_active:
     voice_data = record_audio()
     respond(voice_data)
