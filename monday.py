@@ -60,7 +60,7 @@ def monday_speak(audio_string):
 
 def respond(voice_data):
     if there_exists(['update remote repository']):
-        update_remote_repository()
+        update_remote_repository(voice_data)
     if there_exists(['development environment', 'begin work session', 'begin work day']):
         initialize_development_environment()
     if there_exists(['hey','hi','hello']):
@@ -110,10 +110,14 @@ def initialize_development_environment():
 def send_file_to_home_server():
     pass
 
-def update_remote_repository():
+def update_remote_repository(voice_data):
+    m = voice_data.split('message')[1].split('branch')[0]
+    monday_speak(f'Message: {m}')
+    branch = voice_data.split('branch')[1]
+    monday_speak(f'Branch: {branch}')
     monday_speak('Updating remote repository.')
     os.system('git add monday.py')
-    os.system('git commit -m "Monday initiated"')
+    os.system('git commit -m "{m}"')
     os.system('git push origin master')
 
 def access_config_file():
