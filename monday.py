@@ -59,6 +59,8 @@ def monday_speak(audio_string):
 
 
 def respond(voice_data):
+    if there_exists(['update remote repository']):
+        update_remote_repository()
     if there_exists(['development environment', 'begin work session', 'begin work day']):
         initialize_development_environment()
     if there_exists(['hey','hi','hello']):
@@ -109,9 +111,10 @@ def send_file_to_home_server():
     pass
 
 def update_remote_repository():
+    monday_speak('Updating remote repository.')
     os.system('git add monday.py')
-    os.system('git add monday.py')
-    os.system('git add monday.py')
+    os.system('git commit -m "Monday initiated"')
+    os.system('git push origin master')
 
 def access_config_file():
     """ Access the settings like HOME SERVER so that only this file needs to be
