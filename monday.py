@@ -160,6 +160,7 @@ def update_remote_repository(voice_data):
     os.system('git add monday.py')
     os.system(f'git commit -m "{m}"')
     os.system(f'git push origin {branch}')
+    monday_speak('Done')
 
 def access_config_file():
     """ Access the settings like HOME SERVER so that only this file needs to be
