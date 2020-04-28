@@ -54,9 +54,6 @@ def monday_speak(audio_string):
     playsound.playsound(audio_file)
     os.remove(audio_file)
 
-# def say(text):
-#     subprocess.call(['say', text])
-# say('hello')
 
 
 def respond(voice_data):
@@ -71,7 +68,11 @@ def respond(voice_data):
     if there_exists(['development environment', 'begin work session', 'begin work day']):
         initialize_development_environment()
     
-    # greetings and introductions
+    # greetings, introductions, and pleasantries
+    if there_exists(["thank you","appreciate",]):
+        responses = ["You're welcome", 'Indeed']
+        response = responses[random.randint(0, len(responses)-1)]
+        monday_speak(response)
     if there_exists(['this is monday', 'who are you', 'what are you']):
         monday_speak('I am an Artificial intelligence program. called Monday, however I have only a finite number of executable functinons. All of which are activated by your voice.')
     if there_exists(['hey','hi','hello']):
