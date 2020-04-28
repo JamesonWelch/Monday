@@ -114,13 +114,17 @@ def update_remote_repository(voice_data):
     if 'message' in voice_data:
         m = voice_data.split('message')[1].split('branch')[0]
         monday_speak(f'Message: {m}')
+    else: 
+        m = 'Monday Commit'
     if 'branch' in voice_data:
         branch = voice_data.split('branch')[1]
         monday_speak(f'Branch: {branch}')
+    else: 
+        branch = 'master'
     monday_speak('Updating remote repository.')
     os.system('git add monday.py')
-    os.system('git commit -m "{m}"')
-    os.system('git push origin master')
+    os.system(f'git commit -m "{m}"')
+    os.system(f'git push origin {branch}')
 
 def access_config_file():
     """ Access the settings like HOME SERVER so that only this file needs to be
