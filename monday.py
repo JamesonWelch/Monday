@@ -10,7 +10,7 @@ def instantiate_new_conctract():
     pass
 
 def appointment_recall():
-    """ For appointment level 1, vocalize reminder """
+    """ For appointment level 1(important meetings, etc), vocalize reminder """
     pass
 
 def initialize_development_environment():
