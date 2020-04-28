@@ -109,7 +109,9 @@ def send_file_to_home_server():
     pass
 
 def update_remote_repository():
-    pass
+    os.system('git add monday.py')
+    os.system('git add monday.py')
+    os.system('git add monday.py')
 
 def access_config_file():
     """ Access the settings like HOME SERVER so that only this file needs to be
