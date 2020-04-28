@@ -11,6 +11,7 @@ import pyttsx3
 import subprocess
 import webbrowser
 import datetime
+import pyautogui
 
 
 def there_exists(terms):
@@ -59,7 +60,7 @@ def monday_speak(audio_string):
 
 
 def respond(voice_data):
-    if there_exists(['search Google for']):
+    if there_exists(['search for']):
         query = voice_data.split('search for')[1]
         bsearch(query, google=True)
     if there_exists(['open url']):
@@ -71,8 +72,8 @@ def respond(voice_data):
         initialize_development_environment()
     
     # greetings and introductions
-    if there_exists(['this is monday']):
-        monday_speak('I am an Artificial intelligence program. called Monday, to assist in development operations')
+    if there_exists(['this is monday', 'who are you', 'what are you']):
+        monday_speak('I am an Artificial intelligence program. called Monday, however I have only a finite number of executable functinons. All of which are activated by your voice.')
     if there_exists(['hey','hi','hello']):
         greetings = ['hello','hi','I\'m a computer program devoid of what humans call, emotions, formalities are unessesary']
         greet = greetings[random.randint(0, len(greetings)-1)]
@@ -82,28 +83,41 @@ def respond(voice_data):
     if there_exists(["how are you","how are you doing"]):
         monday_speak("I exist in 1's and 0's. You do the math. The math is binary - that is, base 2, not base 10 by the way")
     if there_exists(["what's the time","tell me the time","what time is it"]):
-        time = ctime().split(" ")[3].split(":")[0:2]
-        if time[0] == "00":
+        _time = ctime().split(" ")[3].split(":")[0:2]
+        if _time[0] == "00":
             hours = '12'
         else:
-            hours = time[0]
-        minutes = time[1]
-        time = hours + " hours and " + minutes + "minutes"
-        monday_speak(time)
-    if there_exists(["are you listening","are you on","status"]):
+            hours = _time[0]
+        minutes = _time[1]
+        _time = hours + " hours and " + minutes + "minutes"
+        monday_speak(_time)
+    if there_exists(["are you listening","are you on","status","what are you doing"]):
         monday_speak("I am currently in active listening mode 1. awaiting instructions.")
+    
+    # Monday program functions
     if there_exists(['shut down', 'exit', 'power down', 'initiate shut down']):
         shutdown()
+    if there_exists(['standby mode']):
+        duration = voice_data.split('for')[1]
+        monday_speak(f'Entering stand by mode for {duration}')
+        if 'minutes' in duration:
+            _len = int(duration.split('minutes')[0]) * 60
+            time.sleep(_len)
+        if 'seconds' in duration:
+            _len = duration.split('seconds')[0]
+            time.sleep(_len)
+    if there_exists(['restart', 'reboot']):
+        reboot()
 
 def bsearch(query, google=False, url=False):
     if google == True:
-        monday_speak(f'Searching Google for {query}')
         google_url = f'https://www.google.com/search?q={query}'
         webbrowser.get().open(google_url)
+        monday_speak(f'Searching Google for {query}')
     if url == True:
-        monday_speak(f'Opening browser for {query}')
         url = f'https://www.{query.strip()}'
         webbrowser.get().open(url)
+        monday_speak(f'Opening browser for {query}')
 
 
 def archive_contract(*args, **kwargs):
@@ -157,14 +171,25 @@ def reminders():
     global rems
     now = datetime.datetime.now()
 
-    if now.hour >= 7 and now.hour <= 11:
+    if now.hour >= 7 and now.hour <= 10:
+        morning_routines(tastk_rem=True)
+    else:
         morning_routines()
-        rems = rems + 1
+    rems = rems + 1
 
-def morning_routines():
+def morning_routines(tastk_rem=False):
     today = datetime.date.today()
     monday_speak(f'Today is {today.strftime("%B %d, %Y")}')
-    monday_speak('Please don\'t forget to perform India Entertainment search contract. ')
+    if tastk_rem == True:
+        monday_speak('Please don\'t forget to perform India Entertainment search contract. ')
+
+def reboot():
+    monday_speak('Initializing reboot procedures')
+    os.system('^C\n' +
+              'deactivate\n' +
+              'cd /Users/i/Documents/repository/Monday\n' +
+              'source venv/bin/activate\n' +
+              'python monday.py')
 
 def shutdown():
     monday_speak('Initiating shutdown protocol')
