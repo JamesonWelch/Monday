@@ -66,8 +66,12 @@ def respond(voice_data):
         update_remote_repository(voice_data)
     if there_exists(['development environment', 'begin work session', 'begin work day']):
         initialize_development_environment()
+    
+    # greetings and introductions
+    if there_exists(['this is monday']):
+        monday_speak('I am an Artificial intelligence program. called Monday, to assist in development operations')
     if there_exists(['hey','hi','hello']):
-        greetings = ['hello','hi','I\'m a computer program, formalities are unessesary']
+        greetings = ['hello','hi','I\'m a computer program devoid of what humans call, emotions, formalities are unessesary']
         greet = greetings[random.randint(0, len(greetings)-1)]
         monday_speak(greet)
     if there_exists(["what is your name","what's your name","tell me your name"]):
