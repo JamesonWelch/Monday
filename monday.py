@@ -12,6 +12,7 @@ import subprocess
 import webbrowser
 import datetime
 import pyautogui
+from apple_calendar_integration import ICloudCalendarAPI
 
 
 def there_exists(terms):
@@ -68,7 +69,9 @@ def respond(voice_data):
     if there_exists(['development environment', 'begin work session', 'begin work day']):
         initialize_development_environment()
     
-    # greetings, introductions, and pleasantries
+    # greetings, introductions, and pleasantries #
+    ##############################################
+    
     if there_exists(["thank you","appreciate",]):
         responses = ["You're welcome", 'Indeed']
         response = responses[random.randint(0, len(responses)-1)]
@@ -94,8 +97,12 @@ def respond(voice_data):
         monday_speak(_time)
     if there_exists(["are you listening","are you on","status","what are you doing"]):
         monday_speak("I am currently in active listening mode 1. awaiting instructions.")
-    
-    # Monday program functions
+
+    # Monday program functions & program routines #
+    ###############################################
+
+    if there_exists(['update your dependencies file']):
+        update_dependancies_file()
     if there_exists(['shut down', 'exit', 'power down', 'initiate shut down']):
         shutdown()
     if there_exists(['standby mode']):
@@ -120,6 +127,12 @@ def bsearch(query, google=False, url=False):
         webbrowser.get().open(url)
         monday_speak(f'Opening browser for {query}')
 
+def task_list():
+    '''
+    Create a separate calendar for Monday and have it mirror personal cal
+    so that creds aren't exposed
+    '''
+    pass
 
 def archive_contract(*args, **kwargs):
     """Final tear down of completed contract"""
@@ -131,7 +144,9 @@ def instantiate_new_conctract():
     pass
 
 def appointment_recall():
-    """ For appointment level 1(important meetings, etc), vocalize reminder """
+    """ For appointment level 1(important meetings, etc), vocalize reminder 
+        Take appt details and have Monday store in object 
+    """
     pass
 
 def initialize_development_environment():
@@ -179,11 +194,20 @@ def reminders():
         morning_routines()
     rems = rems + 1
 
+def teach(query):
+    """
+    get text from wikipedia
+    """
+    pass
+
 def morning_routines(tastk_rem=False):
     today = datetime.date.today()
     monday_speak(f'Today is {today.strftime("%B %d, %Y")}')
     if tastk_rem == True:
         monday_speak('Please don\'t forget to perform India Entertainment search contract. ')
+
+# Monday program routines #
+###########################
 
 def reboot():
     monday_speak('Initializing reboot procedures')
@@ -193,15 +217,21 @@ def reboot():
               'source venv/bin/activate\n' +
               'python monday.py')
 
+
 def shutdown():
     monday_speak('Initiating shutdown protocol')
     monday_speak('Deleting temporary audio files')
     for f in os.listdir():
         if '.mp3' in f:
             os.remove(f)
-    monday_speak('Archiving logs')
-    monday_speak('Good day user. ')
-    exit()
+    monday_speak('Archiving logs.')
+    monday_speak('Good day user.')
+    os.system('exit')
+
+
+def update_dependancies_file():
+    os.system('pip freeze > requirements.txt')
+    monday_speak('Updated requirements.txt with my current library dependancies')
 
 siri_username = 'monday.protocols'
 siri_pw = 'zz@ae.q$pNE{(2DS'
