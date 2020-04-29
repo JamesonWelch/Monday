@@ -386,7 +386,7 @@ def reboot():
 
 def shutdown():
     monday_speak('Initiating shutdown protocol')
-    monday_speak('Deleting audio files')
+    monday_speak('Deleting temporary files')
     for f in os.listdir():
         if '.mp3' in f:
             os.remove(f)
