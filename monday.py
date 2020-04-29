@@ -151,7 +151,9 @@ def respond(voice_data):
     if there_exists(['open']):
         program = voice_data.split('open')[1]
         open_program(program)
+
     if there_exists(['update remote repository']):
+        monday_speak('Connecting to remote servers')
         if 'with all files' in voice_data:
             update_remote_repository(voice_data, all=True)
             monday_speak('Updated remote repository with all files')
