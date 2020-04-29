@@ -392,9 +392,7 @@ def shutdown():
             os.remove(f)
     monday_speak('Archiving logs.')
     monday_speak('Good day.')
-    monday_active = False
     sys.exit()
-    raise Exception
 
 
 def update_dependancies_file():
