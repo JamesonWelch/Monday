@@ -154,12 +154,15 @@ def respond(voice_data):
     if there_exists(['update remote repository']):
         if 'with all files' in voice_data:
             update_remote_repository(voice_data, all=True)
+            monday_speak('Updated remote repository with all files')
         else:
             update_remote_repository(voice_data)
+            monday_speak('Updated remote repository with my program file')
+
     if there_exists(['development environment', 'begin work session', 'begin work day']):
         initialize_development_environment()
     
-    if there_exists('new contract entity'):
+    if 'new contract entity' in voice_data:
         monday_speak('Initializing new contract protocol.')
         try:
             contract_name = voice_data.split('name')[1]
@@ -287,7 +290,7 @@ def update_remote_repository(voice_data, all=False):
         monday_speak(f'Branch: {branch}')
     else: 
         branch = 'master'
-    monday_speak('Updating remote repository.')
+    monday_speak('Connecting to remote repository.')
     if all == True:
         os.system('git add .')
     else:
