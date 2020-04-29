@@ -230,6 +230,15 @@ def task_list():
     '''
     pass
 
+def master_repo_list():
+    pass
+
+def compile_master_repositorty_list():
+    pass
+
+def sync_local_repositories():
+    pass
+
 def archive_contract(*args, **kwargs):
     """Final tear down of completed contract"""
     loc = 'home_server'
