@@ -113,6 +113,12 @@ def respond(voice_data):
         query = voice_data.split('open url')[1]
         bsearch(query, url=True)
 
+    if 'remind me' in voice_data:
+        reminder = voice_data.split('remind me to')[1]
+        set_reminder(reminder)
+
+    if 'what do i need to do' in voice_data:
+        read_reminders()
 
     # greetings, introductions, and pleasantries #
     ##############################################
@@ -190,9 +196,17 @@ def respond(voice_data):
             time.sleep(_len)
     if there_exists(['restart', 'reboot']):
         reboot()
+
+
     if there_exists(['remove', 'delete','clear']) and there_exists(['temporary files', 'audio files']):
         clear_temporary_files()
-        monday_speak('temporary audio files removed')
+        monday_speak('temporary files removed')
+
+    if there_exists(['how many']) and there_exists(['files']):
+        a_f = [x for x in os.listdir() if x.endswith('.mp3')]
+        monday_speak(f'I have {len(a_f)} audio files in my program folder.')
+
+
 
 def bsearch(query, google=False, url=False):
     if google == True:
@@ -292,11 +306,11 @@ def update_remote_repository(voice_data, all=False):
         monday_speak(f'Branch: {branch}')
     else: 
         branch = 'master'
-    monday_speak('Connecting to remote repository.')
     if all == True:
         os.system('git add .')
     else:
         os.system('git add monday.py')
+
     os.system(f'git commit -m "{m}"')
     os.system(f'git push origin {branch}')
     monday_speak('Done')
@@ -322,6 +336,18 @@ def reminders():
     else:
         morning_routines()
     rems = rems + 1
+
+def set_reminder(reminder):
+    monday_speak(f'adding {reminder} to reminders file')
+    with open('reminders.txt', 'a') as f:
+        f.write(reminder + ', ')
+
+def read_reminders():
+    reminders_list = []
+    with open('reminders.txt', 'r') as f:
+        for line in f:
+            reminders_list.append(line)
+    monday_speak(f'You need to {reminders_list}')
 
 def teach(query):
     """
