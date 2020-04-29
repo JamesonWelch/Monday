@@ -239,6 +239,8 @@ def archive_contract(*args, **kwargs):
 def instantiate_new_conctract_entity(contract_name):
     """ Create folders and github repository for new contract """
 
+    # NEED TO CREATE BRIEF DESCRIPTION FOR MONDAY ARCHIVE - QUICKLY RETRIEVE PREVIOUS CODE BE KEYWORD
+    # MONDAY ARCHIVE = NAME, BRIEF DESCRIPTION, REPO URL
 
     monday_speak('Opening browser. Tell me when you are done.')
     webbrowser.get().open('https://github.com/new')
