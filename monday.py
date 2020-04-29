@@ -4,7 +4,7 @@ import speech_recognition as sr
 import playsound # to play an audio file
 from gtts import gTTS # google text to speech
 import random
-import os
+import os, sys
 import time
 from time import ctime
 import pyttsx3
@@ -130,7 +130,7 @@ def respond(voice_data):
         response = responses[random.randint(0, len(responses)-1)]
         monday_speak(response)
     if there_exists(['this is monday', 'who are you', 'what are you']):
-        monday_speak('I am an Artificial intelligence program. called Monday, however I have only a finite number of executable functinons. All of which are activated by your voice.')
+        monday_speak('I am an Artificial intelligence program. called Monday, however I have only a finite number of executable functions. All of which are activated by your voice.')
     if there_exists(['hey','hi','hello']):
         greetings = ['hello','hi','I\'m a computer program devoid of what humans call, emotions, formalities are unessesary']
         greet = greetings[random.randint(0, len(greetings)-1)]
@@ -272,8 +272,8 @@ def functions_list():
                  'perform Google searches and visit websites, as well as conveying'
                  'basic systems diagnostics and protocol levels. I can even reboot and shut down my system.'
                  'Regarding functions that pertain to why I exist, I can update remote repository servers and clone them if need be.'
-                 'When a new client is acquired I can set up the entire development environment save for creating the remote repository'
-                 'as this function necessitates the use of private credentials. This means that all the folders, files, virtual'
+                 'When a new client is acquired, I can set up the entire development environment save for creating the remote repository'
+                 'because this function necessitates the use of private credentials. This means that all the folders, files, virtual'
                  'environments, and git ignore files will be created. I stay busy.'
     )
 
@@ -365,7 +365,7 @@ def morning_routines(tastk_rem=False):
 ###########################
 
 def reboot():
-    monday_speak('Initializing reboot procedures')
+    monday_speak('Initializing reboot protocol')
     os.system('^C\n' +
               'deactivate\n' +
               'cd /Users/i/Documents/repository/Monday\n' +
@@ -382,7 +382,8 @@ def shutdown():
     monday_speak('Archiving logs.')
     monday_speak('Good day.')
     monday_active = False
-    exit()
+    sys.exit()
+    raise Exception
 
 
 def update_dependancies_file():
