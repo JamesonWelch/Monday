@@ -24,6 +24,11 @@ ROOT_DIR = os.getcwd()
 #     level=logging.DEBUG,
 #     datefmt='%Y-%m-%d %H:%M:%S')
 
+repositories = []
+# Current file address and system for MAC ***
+with open('/Users/i/Documents/repository/system_sync/git_sync_list.txt', 'r') as repos:
+    for repo in repos:
+        repositories.append(repo.strip('\n\t'))
 
 def there_exists(terms):
     for term in terms:
@@ -158,7 +163,7 @@ def respond(voice_data):
         program = voice_data.split('open')[1]
         open_program(program)
 
-    if there_exists(['update remote repository']):
+    if there_exists(['update remote repositories']):
         monday_speak('Connecting to remote servers')
         if 'with all files' in voice_data:
             update_remote_repository(voice_data, all=True)
@@ -166,6 +171,15 @@ def respond(voice_data):
         else:
             update_remote_repository(voice_data)
             monday_speak('Updated remote repository with my program file')
+
+    if there_exists(['sync local repository', 'sync all local repositories']):
+        
+        if 'all' in voice_data:
+            monday_speak('Pulling all data from remote servers')
+            sync_local_repository(all=True)
+        else:
+            monday_speak('Pulling my program files from remote servers')
+            sync_local_repository(all=False)
 
     if there_exists(['development environment', 'begin work session', 'begin work day']):
         initialize_development_environment()
@@ -183,7 +197,7 @@ def respond(voice_data):
 
     if there_exists(['update dependencies file']):
         update_dependancies_file()
-    if there_exists(['shut down', 'exit', 'power down', 'initiate shut down']):
+    if there_exists(['shut down', 'exit', 'power down', 'initiate shutdown']):
         shutdown()
     if there_exists(['standby mode']):
         duration = voice_data.split('for')[1]
@@ -266,7 +280,7 @@ def instantiate_new_conctract_entity(contract_name):
     monday_speak(f'Cloned {contract_name} git repository from remote servers')
 
     os.chdir(contract_name)
-    os.system("printf '.DS_Store\nvenv/\ndist/\nbuild/' >> .gitignore")
+    os.system("printf '.DS_Store\nvenv/\ndist/\nbuild/\n__pycache__/' >> .gitignore")
     monday_speak('git ignore file created')
 
     #if os == 'mac':...
@@ -318,12 +332,44 @@ def update_remote_repository(voice_data, all=False):
     else: 
         branch = 'master'
     if all == True:
-        os.system('git add .')
+
+        for repository in repositories:
+            os.chdir('/Users/i/Documents/repository/')
+            if repository not in os.listdir():
+                os.system(f'git clone https://github.com/JamesonWelch/{repository}.git')
+            else:
+                os.chdir(repository)
+                os.system('git add .')
     else:
         os.system('git add monday.py')
 
     os.system(f'git commit -m "{m}"')
     os.system(f'git push origin {branch}')
+    monday_speak('Done')
+
+
+def sync_local_repository(all=False):
+
+    if all == True:
+
+        for repository in repositories:
+            os.chdir('/Users/i/Documents/repository/')
+            if repository not in os.listdir():
+                os.system(f'git clone https://github.com/JamesonWelch/{repository}.git')
+            else:
+                try:
+                    os.chdir(repository)
+                    os.system('git pull origin master')
+                    os.chdir(ROOT_DIR)
+                except:
+                    monday_speak(f'I could not sync the home server with the {repository} remote repository. Please take a look at the log data.')
+    else:
+        try:
+            os.system('git pull origin master')
+        except:
+            monday_speak(f'I could not sync the home server with my remote repository. Please take a look at the log data.')
+        
+
     monday_speak('Done')
 
 def access_config_file():
