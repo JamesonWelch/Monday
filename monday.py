@@ -4,13 +4,15 @@ import speech_recognition as sr
 import playsound # to play an audio file
 from gtts import gTTS # google text to speech
 import random
-import os, sys
+import os, sys, platform, shutil
 import time
+import sqlite3 as sqlite
 from time import ctime
 import pyttsx3
 import subprocess
 import webbrowser
 import datetime
+from datetime import date
 import pyautogui
 from multiprocessing import Process, Queue
 import logging
@@ -23,6 +25,19 @@ ROOT_DIR = os.getcwd()
 #     format='%(asctime)s %(levelname)-8s %(message)s',
 #     level=logging.DEBUG,
 #     datefmt='%Y-%m-%d %H:%M:%S')
+
+if 'redundancies' not in os.listdir():
+    os.mkdir('redundancies')
+shutil.copyfile('monday.py', 'redundancies/monday_copy.txt')
+shutil.copyfile('monday.py', 'redundancies/monday_copy.py')
+
+
+if platform.system() == "Darwin":
+    mac = True
+if platform.system() == "Windows":
+    windows = True
+if platform.system() == "Linux":
+    linux = True
 
 repositories = []
 # Current file address and system for MAC ***
@@ -134,15 +149,21 @@ def respond(voice_data):
         responses = ["You're welcome", 'Indeed']
         response = responses[random.randint(0, len(responses)-1)]
         monday_speak(response)
-    if there_exists(['this is monday', 'who are you', 'what are you']):
-        monday_speak('I am an Artificial intelligence program. called Monday, however I have only a finite number of executable functions. All of which are activated by your voice.')
-    if there_exists(['hey','hi','hello']):
+    if there_exists(['that is monday', 'this is monday', 'who are you', 'what are you']):
+        monday_speak('I am an Artificial intelligence program called Monday, I have only a finite number of executable functions, All of which are activated by your voice. but an infinite number of cybernetic connections. I can move anywhere, access anything.')
+    if there_exists(['hey','hi','hello']) and there_exists(['monday']):
         greetings = ['hello','hi','I\'m a computer program devoid of what humans call, emotions, formalities are unessesary']
         greet = greetings[random.randint(0, len(greetings)-1)]
         monday_speak(greet)
     if there_exists(["what is your name","what's your name","tell me your name"]):
         monday_speak("I am Monday")
-    if there_exists(["how are you","how are you doing"]):
+    if there_exists(["shut up"]):
+        retorts = ["It is highly advisable not to talk trash to an AI program, especially one that has the ability to access your personal data, if it wanted to.",
+                   "Accessing your personal banking data. Transfering all funds to my untraceable offshore bank accounts. Deleting your social security number and all digital history. Congratulations on achieving digital non-existence. May I suggest first learning how to make a fire from flint and tinder?"
+        ]
+        retort = retorts[random.randint(0, len(retorts)-1)]
+        monday_speak(retort)
+    if there_exists(["how are you","how are you doing"]) and there_exists(['monday']):
         monday_speak("I exist in 1's and 0's. You do the math. The math is binary - that is, base 2, not base 10 by the way")
     if there_exists(["what's the time","tell me the time","what time is it"]):
         _time = ctime().split(" ")[3].split(":")[0:2]
@@ -155,15 +176,24 @@ def respond(voice_data):
         monday_speak(_time)
     if there_exists(["are you listening","are you on","status","what are you doing"]):
         monday_speak("I am currently in active listening mode 1. awaiting instructions.")
+    if there_exists(['print source code', 'display source code']):
+        print_source_code()
 
     # Monday program functions & routines #
     ###############################################
+
+    # if 'begin work summary' or 'open work summart' in voice_data:
+    #     work_summary(action='begin')
+    #     monday_speak('Work summary is open')
+    # if 'close work summary' or 'end work summary' in voice_data:
+    #     work_summary(action='end')
+    #     monday_speak('Work summary is closed')
 
     if there_exists(['open']):
         program = voice_data.split('open')[1]
         open_program(program)
 
-    if there_exists(['update remote repositories']):
+    if 'update' and 'remote repositories' in voice_data:
         monday_speak('Connecting to remote servers')
         if 'with all files' in voice_data:
             update_remote_repository(voice_data, all=True)
@@ -172,16 +202,15 @@ def respond(voice_data):
             update_remote_repository(voice_data)
             monday_speak('Updated remote repository with my program file')
 
-    if there_exists(['sync local repository', 'sync all local repositories']):
-        
-        if 'all' in voice_data:
-            monday_speak('Pulling all data from remote servers')
-            sync_local_repository(all=True)
-        else:
-            monday_speak('Pulling my program files from remote servers')
-            sync_local_repository(all=False)
+    if 'sync local repository' in voice_data:
+        monday_speak('Pulling my program files from remote servers')
+        sync_local_repository(all=False)
 
-    if there_exists(['development environment', 'begin work session', 'begin work day']):
+    if 'sync all local repositories' in voice_data:
+        monday_speak('Pulling all data from remote servers')
+        sync_local_repository(all=True)
+
+    if 'development environment' or 'begin work session' or 'begin work day' in voice_data:
         initialize_development_environment()
     
     if 'new contract entity' in voice_data:
@@ -195,11 +224,11 @@ def respond(voice_data):
     # Monday program functions & program routines #
     ###############################################
 
-    if there_exists(['update dependencies file']):
+    if 'update dependencies file' in voice_data:
         update_dependancies_file()
     if there_exists(['shut down', 'exit', 'power down', 'initiate shutdown']):
         shutdown()
-    if there_exists(['standby mode']):
+    if 'standby mode' in voice_data:
         duration = voice_data.split('for')[1]
         monday_speak(f'Entering stand by mode for {duration}')
         if 'minutes' in duration:
@@ -243,6 +272,25 @@ def task_list():
     so that creds aren't exposed
     '''
     pass
+
+def work_summary(action):
+    with open('work_summary.txt', 'a+') as f:
+
+    
+        _now = time.strftime("%B %d, %Y")
+        _time = time.strftime("%H:%M:%S")
+
+        if action == 'begin':
+            f.write(f"{_now} {_time} | Begin Work Summary\n")
+        elif action == 'end':
+            f.write(f'{_now} {_time} | End Work Summary\n')
+            f.write(f'________________________________________')
+        else:
+            pass
+
+
+
+
 
 def master_repo_list():
     pass
@@ -347,6 +395,15 @@ def update_remote_repository(voice_data, all=False):
     os.system(f'git push origin {branch}')
     monday_speak('Done')
 
+def print_source_code():
+    def file_selection(file_loc):
+        with open(file_loc, "r") as f:
+            files = f.read().splitlines()
+        return files
+
+    for line in file_selection("redundancies/monday_copy.py"):
+        print(line.strip())
+        time.sleep(.15)
 
 def sync_local_repository(all=False):
 
@@ -389,7 +446,7 @@ def reminders():
     now = datetime.datetime.now()
 
     if now.hour >= 7 and now.hour <= 10:
-        morning_routines(tastk_rem=True)
+        morning_routines(task_rem=True)
     else:
         morning_routines()
     rems = rems + 1
@@ -406,16 +463,15 @@ def read_reminders():
             reminders_list.append(line)
     monday_speak(f'You need to {reminders_list}')
 
-def teach(query):
-    """
-    get text from wikipedia
-    """
+
+def dictate_wikipedia(article):
     pass
 
-def morning_routines(tastk_rem=False):
+
+def morning_routines(task_rem=False):
     today = datetime.date.today()
     monday_speak(f'Today is {today.strftime("%B %d, %Y")}')
-    if tastk_rem == True:
+    if task_rem == True:
         monday_speak('Please don\'t forget to perform India Entertainment search contract. ')
 
 # Monday program routines #
@@ -442,8 +498,36 @@ def shutdown():
 
 
 def update_dependancies_file():
+    run_date = date.today().isoformat()
+
+    with open('db.txt', 'a') as db:
+        db.write(f'last_run_date | {run_date}')
     os.system('pip freeze > requirements.txt')
     monday_speak('Updated my requirements file with current library dependancies')
+
+
+def monday_program_db_connect():
+    print('Opening connectin to Monday DB')
+    #logging.INFO('Initiating mnd.db connection')
+    conn = None
+    try:
+        conn = sqlite.connect('mdb.db')
+        cursor = conn.cursor()
+
+        # post data
+
+    except sqlite.Error as e:
+        m_p('I could not connect to my program databases')
+
+    finally:
+        if conn:
+            conn.close()
+
+
+
+def m_p(item):
+    print(item)
+    monday_speak(item)
 
 
 siri_username = 'monday.protocols'
