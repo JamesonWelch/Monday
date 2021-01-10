@@ -9,6 +9,8 @@ import time
 import sqlite3 as sqlite
 from time import ctime
 import pyttsx3
+from bs4 import BeautifulSoup
+import requests
 import subprocess
 import webbrowser
 import datetime
@@ -16,32 +18,43 @@ from datetime import date
 import pyautogui
 from multiprocessing import Process, Queue
 import logging
-from apple_calendar_integration import ICloudCalendarAPI
+# from apple_calendar_integration import ICloudCalendarAPI
 
+"""
+If problems installing PyAudio for Windows:
+https://stackoverflow.com/questions/52283840/i-cant-install-pyaudio-on-windows-how-to-solve-error-microsoft-visual-c-14
+"""
 
 ROOT_DIR = os.getcwd()
 
-# logging.basicConfig(
-#     format='%(asctime)s %(levelname)-8s %(message)s',
-#     level=logging.DEBUG,
-#     datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.ERROR,
+    datefmt='%Y-%m-%d %H:%M:%S')
 
 if 'redundancies' not in os.listdir():
     os.mkdir('redundancies')
 shutil.copyfile('monday.py', 'redundancies/monday_copy.txt')
 shutil.copyfile('monday.py', 'redundancies/monday_copy.py')
 
+mac = False
+windows = False
+linux = False
 
 if platform.system() == "Darwin":
     mac = True
 if platform.system() == "Windows":
     windows = True
+    edge_registered = False
 if platform.system() == "Linux":
     linux = True
 
+ROOT_DIR = os.path.join(os.getcwd())
+REPO_DIR = os.path.join(os.getcwd(), '..')
+
 repositories = []
 # Current file address and system for MAC ***
-with open('/Users/i/Documents/repository/system_sync/git_sync_list.txt', 'r') as repos:
+with open(os.path.join(REPO_DIR, 'system_sync/git_sync_list.txt'), 'r') as repos:
     for repo in repos:
         repositories.append(repo.strip('\n\t'))
 
@@ -115,7 +128,7 @@ def record_audio(ask=False):
 
 def monday_speak(audio_string):
     audio_string = str(audio_string)
-    tts = gTTS(text=audio_string, lang='en')
+    tts = gTTS(text=audio_string, lang='en-gb')
     r = random.randint(1,20000000)
     audio_file = 'audio-' + str(r) + '.mp3'
     tts.save(audio_file)
@@ -140,8 +153,17 @@ def respond(voice_data):
     if 'what do i need to do' in voice_data:
         read_reminders()
 
+    if 'what are my reminders' in voice_data:
+        read_reminders()
+
+    if 'clear reminders' in voice_data:
+        clear_reminders()
+
     # greetings, introductions, and pleasantries #
     ##############################################
+
+    if there_exists(["what is the weather","what is the temperature","how cold is it","how hot is it"]):
+        current_weather()
     
     if there_exists(["what can you do","what's your functionality","your systems", "your functions", "what you do"]):
         functions_list()
@@ -189,9 +211,48 @@ def respond(voice_data):
     #     work_summary(action='end')
     #     monday_speak('Work summary is closed')
 
+    if 'go to' and 'directory' in voice_data:
+        _dir = voice_data.split('go to')[1].split('directory')[0].strip()
+        if 'root' in _dir or 'route' in _dir:
+            monday_speak(f'Changing current directory to in-scope root')
+            _chdir(root_scope=True)
+        if 'your' in _dir:
+            monday_speak(f'Changing current location to my root directory')
+            _chdir(_dir='_Monday')
+        if 'index' in _dir:
+            try:
+                index = int(_dir.split(' ')[1])
+                _chdir(_dir=index)
+            except:
+                monday_speak(f'I didn\'t hear the directory index')
+        else:
+            _dir.replace(' ', '')
+            monday_speak(f'Changing current directory to {_dir}')
+            _chdir(_dir=_dir)
+
+    if 'go back' in voice_data:
+        try:
+            # level = int(voice_data.split('go back')[1])
+            # monday_speak(f'Going back')
+            _chdir(_dir='..')
+        except:
+            monday_speak("I didn't hear how many times to back up")
+
+    # if 'go to root in-scope directory' in voice_data:
+    #     monday_speak(f'Changing current directory to in-scope root')
+    #     _chdir(root_scope=True)
+
+    # if 'go back to your directory' in voice_data:
+    #     _dir = voice_data.split('go to')[1].split('directory')[0]
+    #     monday_speak(f'Changing current directory to {_dir}')
+    #     _chdir(_dir='_Monday')
+
     if there_exists(['open']):
         program = voice_data.split('open')[1]
         open_program(program)
+
+    if 'list directories' in voice_data:
+        _ls()
 
     if 'update' and 'remote repositories' in voice_data:
         monday_speak('Connecting to remote servers')
@@ -202,13 +263,13 @@ def respond(voice_data):
             update_remote_repository(voice_data)
             monday_speak('Updated remote repository with my program file')
 
-    if 'sync local' and 'repository' or 'repositories' in voice_data:
-        monday_speak('Pulling my program files from remote servers')
-        sync_local_repository(all=False)
+    # if 'sync local' and 'repository'in voice_data:
+    #     monday_speak('Pulling my program files from remote servers')
+    #     sync_local_repository(all=False)
 
-    if 'sync all local repositories' in voice_data:
-        monday_speak('Pulling all data from remote servers')
-        sync_local_repository(all=True)
+    # if 'sync all local repositories' in voice_data:
+    #     monday_speak('Pulling all data from remote servers')
+    #     sync_local_repository(all=True)
 
     ### ******** EXECUTES WITHOUT THE GIVEN COMMAND ON ITS OWN *******
     # if 'development environment' or 'begin work session' or 'begin work day' in voice_data:
@@ -225,6 +286,11 @@ def respond(voice_data):
     # Monday program functions & program routines #
     ###############################################
 
+    if 'backup' in voice_data or 'back up' in voice_data and 'your source code' in voice_data:
+        shutil.copyfile('monday.py', 'redundancies/monday_copy.txt')
+        shutil.copyfile('monday.py', 'redundancies/monday_copy.py')
+        monday_speak('My source code backup is now current')
+
     if 'update dependencies file' in voice_data:
         update_dependancies_file()
     if there_exists(['shut down', 'exit', 'power down', 'initiate shutdown']):
@@ -236,7 +302,7 @@ def respond(voice_data):
             _len = int(duration.split('minutes')[0]) * 60
             time.sleep(_len)
         if 'seconds' in duration:
-            _len = duration.split('seconds')[0]
+            _len = int(duration.split('seconds')[0])
             time.sleep(_len)
     if there_exists(['restart', 'reboot']):
         reboot()
@@ -253,10 +319,20 @@ def respond(voice_data):
 
 
 def bsearch(query, google=False, url=False):
+    if windows:
+        edge_path = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+        webbrowser.register('edge', None,webbrowser.BackgroundBrowser(edge_path))
+        edge = True
     if google == True:
-        google_url = f'https://www.google.com/search?q={query}'
-        webbrowser.get().open(google_url)
-        monday_speak(f'Searching Google for {query}')
+        try:
+            google_url = f'https://www.google.com/search?q={query}'
+            if edge:
+                webbrowser.get('edge').open(google_url)
+            else:
+                webbrowser.get().open(google_url)
+            monday_speak(f'Searching Google for {query}')
+        except Exception as e:
+            print(f'Error: {e}')
     if url == True:
         url = f'https://www.{query.strip()}'
         webbrowser.get().open(url)
@@ -317,7 +393,9 @@ def instantiate_new_conctract_entity(contract_name):
     monday_speak('Opening browser. Tell me when you are done.')
     webbrowser.get().open('https://github.com/new')
     time.sleep(20)
-        
+    
+    soup = BeautifulSoup(webbrowser)
+
     # logging.info("New contract entity instantiated: %s", contract_name)
 
     os.chdir('/Users/i/Documents/repository')
@@ -382,6 +460,39 @@ def initialize_development_environment():
 def send_file_to_home_server():
     pass
 
+# FS functions
+def _chdir(_dir=None, root_scope=False):
+    if _dir:
+        if isinstance(_dir, int):
+            try:
+                _dir = os.listdir()[_dir]
+                monday_speak(f'Looking in the {_dir} directory')
+                os.chdir(os.path.join(REPO_DIR, _dir))
+            except:
+                pass
+        else:
+            try:
+                os.chdir(os.path.join(REPO_DIR, _dir))
+                monday_speak(f'Looking in the {_dir} directory')
+            except:
+                pass
+        if _dir == '..':
+            os.chdir(_dir)
+            current = os.getcwd().split("\\")[-1]
+            monday_speak(f'Currently in {current}')
+    if root_scope:
+        try:
+            os.chdir(REPO_DIR)
+        except:
+            pass
+
+def _ls():
+    for index, item in enumerate(os.listdir()):
+        if index <= 2:
+            monday_speak(item + 'index' + str(index))
+        else:
+            monday_speak(item + str(index))
+
 def update_remote_repository(voice_data, all=False):
     if 'message' in voice_data:
         m = voice_data.split('message')[1].split('branch')[0]
@@ -396,14 +507,14 @@ def update_remote_repository(voice_data, all=False):
     if all == True:
 
         for repository in repositories:
-            os.chdir('/Users/i/Documents/repository/')
+            os.chdir(REPO_DIR)
             if repository not in os.listdir():
                 os.system(f'git clone https://github.com/JamesonWelch/{repository}.git')
             else:
                 os.chdir(repository)
                 os.system('git add .')
     else:
-        os.system('git add monday.py')
+        os.system('git add .')
 
     os.system(f'git commit -m "{m}"')
     os.system(f'git push origin {branch}')
@@ -424,7 +535,7 @@ def sync_local_repository(all=False):
     if all == True:
 
         for repository in repositories:
-            os.chdir('/Users/i/Documents/repository/')
+            os.chdir(REPO_DIR)
             if repository not in os.listdir():
                 os.system(f'git clone https://github.com/JamesonWelch/{repository}.git')
             else:
@@ -447,7 +558,8 @@ def access_config_file():
     """ Access the settings like HOME SERVER so that only this file needs to be
         changed in the event of a move or hardware/software revamp 
         e.g. Local/Public IP, SSH config, Home Server connection settings
-    """  
+    """
+    pass
 
 def clear_temporary_files():
     for f in os.listdir():
@@ -477,27 +589,48 @@ def read_reminders():
             reminders_list.append(line)
     monday_speak(f'You need to {reminders_list}')
 
+def clear_reminders():
+    with open('reminders.txt', 'w') as f:
+        f.write('')
+    monday_speak('Reminders file cleared out')
 
 def dictate_wikipedia(article):
     pass
 
+def current_weather():
+    APIKEY = '1db843324b9dc2c6437638d6be0aefc6'
+    r = requests.get(f'http://api.openweathermap.org/data/2.5/weather?q=Santa%20Monica&appid={APIKEY}&units=imperial')
+    data = r.json()
+    temp = int(data['main']['temp'])
+    monday_speak(f'It is {str(temp)} degrees outside')
 
 def morning_routines(task_rem=False):
     today = datetime.date.today()
     monday_speak(f'Today is {today.strftime("%B %d, %Y")}')
     if task_rem == True:
-        monday_speak('Please don\'t forget to perform India Entertainment search contract. ')
+        monday_speak('Please don\'t forget to keep my source code open for constant updates. ')
 
 # Monday program routines #
 ###########################
 
 def reboot():
+    """
+    Reboot Monday by exiting out of program, deactivate then reactivate venv
+    then execture monday.py
+    """
+    if windows:
+        venv_path = 'venv/Scripts/activate'
+        command = f'^C & deactivate & cd {ROOT_DIR} & {venv_path} & python monday.py'
     monday_speak('Initializing reboot protocol')
-    os.system('^C\n' +
-              'deactivate\n' +
-              'cd /Users/i/Documents/repository/Monday\n' +
-              'source venv/bin/activate\n' +
-              'python monday.py')
+
+    process = subprocess.Popen(command,stdout=subprocess.PIPE,shell=True)
+    proc_stdout = process.communicate()[0].strip()
+
+    # os.system('^C\n' +
+    #           'deactivate\n' +
+    #           'cd /Users/i/Documents/repository/Monday\n' +
+    #           venv_path +
+    #           'python monday.py')
 
 
 def shutdown():
@@ -521,7 +654,7 @@ def update_dependancies_file():
 
 
 def monday_program_db_connect():
-    print('Opening connectin to Monday DB')
+    print('Connecting to Monday DB')
     #logging.INFO('Initiating mnd.db connection')
     conn = None
     try:

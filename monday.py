@@ -514,7 +514,7 @@ def update_remote_repository(voice_data, all=False):
                 os.chdir(repository)
                 os.system('git add .')
     else:
-        os.system('git add monday.py')
+        os.system('git add .')
 
     os.system(f'git commit -m "{m}"')
     os.system(f'git push origin {branch}')
