@@ -48,7 +48,9 @@ if platform.system() == "Darwin":
     mac = True
 if platform.system() == "Windows":
     windows = True
-    edge_registered = False
+    edge_path = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+    webbrowser.register('edge', None,webbrowser.BackgroundBrowser(edge_path))
+    edge_registered = True
 if platform.system() == "Linux":
     linux = True
 
@@ -246,9 +248,9 @@ def respond(voice_data):
     #     monday_speak('Work summary is closed')
 
     if 'display directory contents and indexes' in voice_data:
-        monday_speak('Current directory contents and indexes are displayed in my terminal standard out')
         for index, item in enumerate(os.listdir()):
             print(item, ' ', index)
+        monday_speak('Current directory contents and indexes are displayed in my terminal standard out')
 
     if 'go to' in voice_data or 'change' in voice_data and 'directory' in voice_data:
         if 'index' in voice_data:
@@ -317,6 +319,17 @@ def respond(voice_data):
             update_remote_repository(voice_data)
             monday_speak('Updated remote repository with my program files')
 
+    if 'push local repository' in voice_data:
+        if 'branch' in voice_data:
+            branch = voice_data.split('branch')[-1]
+            git_push(branch)
+        git_push()
+
+    if 'open code editor' in voice_data:
+        if windows:
+            os.system('code .')
+        monday_speak(f'Opening V S Code ')
+
     # if 'sync local' and 'repository'in voice_data:
     #     monday_speak('Pulling my program files from remote servers')
     #     sync_local_repository(all=False)
@@ -337,12 +350,23 @@ def respond(voice_data):
         except IndexError as e:
             monday_speak('You didn\'t give me a name for the contract.')
 
+    if 'start new repository' in voice_data:
+        monday_speak('Initializing new entity protocol.')
+        try:
+            contract_name = voice_data.split('name')[1]
+            instantiate_new_conctract_entity(contract_name)
+        except IndexError as e:
+            monday_speak('You didn\'t give me a name for the contract.')
+
     # Monday program functions & program routines #
     ###############################################
 
     if 'backup' in voice_data or 'back up' in voice_data and 'your source code' in voice_data:
-        shutil.copyfile('monday.py', 'redundancies/monday_copy.txt')
-        shutil.copyfile('monday.py', 'redundancies/monday_copy.py')
+        monday_source_code = os.path.join(ROOT_DIR,'monday.py')
+        txt_backup_path = os.path.join(ROOT_DIR,'redundancies/monday_copy.txt')
+        py_backup_path = os.path.join(ROOT_DIR,'redundancies/monday_copy.py')
+        shutil.copyfile(monday_source_code, txt_backup_path)
+        shutil.copyfile(monday_source_code, py_backup_path)
         monday_speak('My source code backup is now current')
 
     if 'update dependencies file' in voice_data:
@@ -446,14 +470,17 @@ def instantiate_new_conctract_entity(contract_name):
     # MONDAY ARCHIVE = NAME, BRIEF DESCRIPTION, REPO URL
 
     monday_speak('Opening browser. Tell me when you are done.')
-    webbrowser.get().open('https://github.com/new')
+    if windows:
+        webbrowser.get('edge').open('https://github.com/new')
+    if mac:
+        webbrowser.get().open('https://github.com/new')
     time.sleep(20)
     
-    soup = BeautifulSoup(webbrowser)
+    # soup = BeautifulSoup(webbrowser)
 
-    # logging.info("New contract entity instantiated: %s", contract_name)
+    logging.info("New contract entity instantiated: %s", contract_name)
 
-    os.chdir('/Users/i/Documents/repository')
+    os.chdir(REPO_DIR)
     contract_name = contract_name.strip()
     contract_name = contract_name.replace(' ', '_')
 
@@ -461,12 +488,20 @@ def instantiate_new_conctract_entity(contract_name):
     os.system(f'git clone https://github.com/JamesonWelch/{contract_name}.git')
     monday_speak(f'Cloned {contract_name} git repository from remote servers')
 
+    gitignore_append = ['# Misc','.DS_Store','venv','dist','build','__pycache__','.vscode',]
+
     os.chdir(contract_name)
-    os.system("printf '.DS_Store\nvenv/\ndist/\nbuild/\n__pycache__/\n.vscode' >> .gitignore")
-    os.system("touch notes.txt")
+    if mac:
+        os.system("printf '.DS_Store\nvenv/\ndist/\nbuild/\n__pycache__/\n.vscode' >> .gitignore")
+        os.system("touch notes.txt")
+    if windows:
+        for ignore in gitignore_append:
+            os.system(f"echo {ignore} >> .gitignore")
+        os.system("type null notes.txt")
+
     os.system("git add .")
     os.system("git commit -m 'Added .gitignore and notes.txt'")
-    os.system("git push origin master")
+    os.system("git push origin main")
     monday_speak('git ignore file created')
 
     #if os == 'mac':...
@@ -475,6 +510,9 @@ def instantiate_new_conctract_entity(contract_name):
     except:
         pass
     
+    if windows:
+        os.system("venv/Scripts/activate.bat")
+        os.system('code .')
 
 def functions_list():
     monday_speak('I have a range of functions I can perform. While many of those functions can be used in any situation,'
@@ -603,6 +641,15 @@ def update_remote_repository(voice_data, all=False):
     os.system(f'git commit -m "{m}"')
     os.system(f'git push origin {branch}')
     monday_speak('Done')
+
+def git_push(branch=None):
+    current = os.path.split(os.getcwd())[-1]
+    if not branch:
+        branch = 'main'
+    os.system('git add .')
+    os.system(f'git commit -m "Monday push"')
+    os.system(f'git push origin {branch}')
+    monday_speak(f'Updated remote servers with the {current} repository')
 
 def print_source_code():
     def file_selection(file_loc):
