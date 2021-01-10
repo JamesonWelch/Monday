@@ -218,11 +218,11 @@ def respond(voice_data):
         monday_speak("I am currently in active listening mode 1. awaiting instructions.")
     if there_exists(['print source code', 'display source code']):
         print_source_code()
-        
+
     if there_exists(['how long have you been active', 'what is your up time']):
         uptime = (time.time() - prog_start) / 60
         if uptime < 60:
-            monday_speak(f'My systems have been active for {uptime} minutes')
+            monday_speak(f'My systems have been active for {round(uptime,2)} minutes')
         elif uptime > 60:
             uptime = int(uptime/60)
             if uptime > 1:
@@ -230,7 +230,7 @@ def respond(voice_data):
             elif uptime == 1:
                 hour = 'hour'
             frac = uptime % 60
-            monday_speak(f'My systems have been active for {uptime} {hour} and {frac} minutes')
+            monday_speak(f'My systems have been active for {uptime} {hour} and {round(frac,1)} minutes')
 
     if there_exists(['beginning workflow', 'starting work session', 'sitting down for work', 'start work']):
         begin_work_session()
@@ -244,6 +244,11 @@ def respond(voice_data):
     # if 'close work summary' or 'end work summary' in voice_data:
     #     work_summary(action='end')
     #     monday_speak('Work summary is closed')
+
+    if 'display directory contents and indexes' in voice_data:
+        monday_speak('Current directory contents and indexes are displayed in my terminal standard out')
+        for index, item in enumerate(os.listdir()):
+            print(item, ' ', index)
 
     if 'go to' in voice_data or 'change' in voice_data and 'directory' in voice_data:
         if 'index' in voice_data:
@@ -260,21 +265,24 @@ def respond(voice_data):
             _chdir(_dir='_Monday')
         if index_src:
             try:
-                index = int(_dir.split(' ')[1])
-                _chdir(_dir=_index)
-            except:
+                # index = int(_dir.split(' ')[1])
+                _chdir(_dir=int(_index))
+            except Exception as e:
+                print(e)
                 monday_speak(f'I didn\'t hear the directory index')
         else:
             _dir.replace(' ', '')
             monday_speak(f'Changing current directory to {_dir}')
             _chdir(_dir=_dir)
 
-    if 'go back' in voice_data:
+    if 'go back one level' in voice_data:
         try:
             # level = int(voice_data.split('go back')[1])
             # monday_speak(f'Going back')
-            _chdir(_dir='..')
-        except:
+            os.chdir('..')
+            monday_speak(f'Currently in {os.path.split(os.getcwd())[-1]}')
+        except Exception as e:
+            print(e)
             monday_speak("I didn't hear how many times to back up")
 
     # if 'go to root in-scope directory' in voice_data:
@@ -554,7 +562,7 @@ def _chdir(_dir=None, root_scope=False):
                 pass
         if _dir == '..':
             os.chdir(_dir)
-            current = os.getcwd().split("\\")[-1]
+            current = os.path.split(os.getcwd())[-1]
             monday_speak(f'Currently in {current}')
     if root_scope:
         try:
