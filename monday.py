@@ -304,7 +304,7 @@ def respond(voice_data):
     if 'what directory' in voice_data:
         monday_speak(f'My file system cursor is in the {os.path.split(os.getcwd())[-1]} directory')
 
-    if 'update' in voice_data and 'remote repositories' in voice_data:
+    if 'update' in voice_data and 'remote repositories' in voice_data or 'remote repository' in voice_data:
         monday_speak('Connecting to remote servers')
         if 'with all files' in voice_data:
             update_remote_repository(voice_data, all=True)
