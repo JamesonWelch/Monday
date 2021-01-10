@@ -102,10 +102,16 @@ def timeout(seconds, action=None):
 
 r = sr.Recognizer()
 rems = 0
+time_lap = None
+reminded = False
 def record_audio(ask=False):
     with sr.Microphone() as source:
+        global reminded
         today = datetime.date.today()
         time.ctime()
+        if format(datetime.datetime.now(), '%H:%M') == time_lap and reminded == False:
+            cron()
+            reminded = True
         print(f'Status: Active | Current Time: {time.strftime("%H:%M")} {today.strftime("%B %d, %Y")}')
 
         if ask:
@@ -177,7 +183,7 @@ def respond(voice_data):
     
     if there_exists(["what can you do","what's your functionality","your systems", "your functions", "what you do"]):
         functions_list()
-    if there_exists(["thank you","appreciate",]):
+    if there_exists(["thank you","appreciate","thanks"]):
         responses = ["You're welcome", 'Indeed']
         response = responses[random.randint(0, len(responses)-1)]
         monday_speak(response)
@@ -210,6 +216,9 @@ def respond(voice_data):
         monday_speak("I am currently in active listening mode 1. awaiting instructions.")
     if there_exists(['print source code', 'display source code']):
         print_source_code()
+
+    if there_exists(['beginning workflow', 'starting work session', 'sitting down for work', 'start work']):
+        begin_work_session()
 
     # Monday program functions & routines #
     ###############################################
@@ -470,6 +479,19 @@ def appointment_recall():
         Take appt details and have Monday store in object 
     """
     pass
+
+def begin_work_session():
+    global time_lap
+    global reminded
+    reminded = False
+    
+    time_lap = format(datetime.datetime.now() + datetime.timedelta(hours=1), '%H:%M')
+    monday_speak('Got it')
+
+def cron():
+    responses = ['It has been an hour since you started work. Perhaps a break is necessary','You have been working for an hour now.', 'You have been working for one hour. Longevity is key',]
+    response = responses[random.randint(0, len(responses)-1)]
+    monday_speak(response)
 
 def initialize_development_environment():
 
