@@ -38,6 +38,8 @@ if 'redundancies' not in os.listdir():
 shutil.copyfile('monday.py', 'redundancies/monday_copy.txt')
 shutil.copyfile('monday.py', 'redundancies/monday_copy.py')
 
+prog_start = time.time()
+
 mac = False
 windows = False
 linux = False
@@ -216,6 +218,19 @@ def respond(voice_data):
         monday_speak("I am currently in active listening mode 1. awaiting instructions.")
     if there_exists(['print source code', 'display source code']):
         print_source_code()
+        
+    if there_exists(['how long have you been active', 'what is your up time']):
+        uptime = (time.time() - prog_start) / 60
+        if uptime < 60:
+            monday_speak(f'My systems have been active for {uptime} minutes')
+        elif uptime > 60:
+            uptime = int(uptime/60)
+            if uptime > 1:
+                hour = 'hours'
+            elif uptime == 1:
+                hour = 'hour'
+            frac = uptime % 60
+            monday_speak(f'My systems have been active for {uptime} {hour} and {frac} minutes')
 
     if there_exists(['beginning workflow', 'starting work session', 'sitting down for work', 'start work']):
         begin_work_session()
