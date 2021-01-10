@@ -139,9 +139,14 @@ def monday_speak(audio_string):
 
 
 def respond(voice_data):
-    os.chdir(ROOT_DIR)
-    if there_exists(['search for']):
-        query = voice_data.split('search for')[1]
+    if there_exists(['search']):
+        if 'search for' in voice_data:
+            query = voice_data.split('search for')[1]
+        if 'search stack overflow' in voice_data:
+            query = voice_data.split('search stack overflow')[1]
+            bsearch(query, url=True)
+        else:
+            query = voice_data.split('search')[1]
         bsearch(query, google=True)
     if there_exists(['open url']):
         query = voice_data.split('open url')[1]
@@ -267,7 +272,7 @@ def respond(voice_data):
     if 'what directory' in voice_data:
         monday_speak(f'My file system cursor is in the {os.path.split(os.getcwd())[-1]} directory')
 
-    if 'update' and 'remote repositories' in voice_data:
+    if 'update' in voice_data and 'remote repositories' in voice_data:
         monday_speak('Connecting to remote servers')
         if 'with all files' in voice_data:
             update_remote_repository(voice_data, all=True)
@@ -318,6 +323,7 @@ def respond(voice_data):
         if 'minutes' in duration:
             _len = int(duration.split('minutes')[0]) * 60
             time.sleep(_len)
+            monday_speak('My systems are off standby and fully active')
         if 'seconds' in duration:
             _len = int(duration.split('seconds')[0])
             time.sleep(_len)
@@ -620,7 +626,10 @@ def read_reminders():
     with open('reminders.txt', 'r') as f:
         for line in f:
             reminders_list.append(line)
-    monday_speak(f'You need to {reminders_list}')
+    if len(reminders_list) > 0:
+        monday_speak(f'You need to {reminders_list}')
+    else:
+        monday_speak(f'I have nothing for you to do')
 
 def clear_reminders():
     with open('reminders.txt', 'w') as f:
