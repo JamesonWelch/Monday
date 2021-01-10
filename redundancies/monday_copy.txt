@@ -18,6 +18,7 @@ from datetime import date
 import pyautogui
 from multiprocessing import Process, Queue
 import logging
+import json
 # from apple_calendar_integration import ICloudCalendarAPI
 
 """
@@ -145,6 +146,10 @@ def respond(voice_data):
     if there_exists(['open url']):
         query = voice_data.split('open url')[1]
         bsearch(query, url=True)
+
+    if 'add' in voice_data and 'source code research' in voice_data:
+        module = voice_data.split('add the')[1].split('module')[0]
+        source_code_research(module.strip())
 
     if 'remind me' in voice_data:
         reminder = voice_data.split('remind me to')[1]
@@ -460,6 +465,22 @@ def initialize_development_environment():
 def send_file_to_home_server():
     pass
 
+def source_code_research(module):
+    research_fpath = os.listdir(os.path.join(ROOT_DIR))
+    if 'source_code_research.json' not in research_fpath:
+        with open('source_code_research.json', 'w') as f:
+            data = {}
+            data['modules'] = []
+            f.write(json.dumps(data,indent=4))
+
+    with open('source_code_research.json', 'r') as f:
+        data = json.loads(f.read())
+    
+    data['modules'].append(module)
+    with open('source_code_research.json', 'w') as f:
+        f.write(json.dumps(data,indent=4))
+    monday_speak(f'Added the {module} module to the source code research file')
+
 # FS functions
 def _chdir(_dir=None, root_scope=False):
     if _dir:
@@ -602,7 +623,10 @@ def current_weather():
     r = requests.get(f'http://api.openweathermap.org/data/2.5/weather?q=Santa%20Monica&appid={APIKEY}&units=imperial')
     data = r.json()
     temp = int(data['main']['temp'])
+    wind = data['wind']['speed']
     monday_speak(f'It is {str(temp)} degrees outside')
+    if wind > 3:
+        monday_speak(f'and a bit windy at {wind} miles per hour')
 
 def morning_routines(task_rem=False):
     today = datetime.date.today()
