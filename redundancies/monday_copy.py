@@ -668,7 +668,7 @@ def current_weather():
     temp = int(data['main']['temp'])
     wind = data['wind']['speed']
     monday_speak(f'It is {str(temp)} degrees outside')
-    if wind > 3:
+    if wind > 10:
         monday_speak(f'and a bit windy at {wind} miles per hour')
 
 def morning_routines(task_rem=False):
