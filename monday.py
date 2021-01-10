@@ -10,6 +10,7 @@ import sqlite3 as sqlite
 from time import ctime
 import pyttsx3
 from bs4 import BeautifulSoup
+import requests
 import subprocess
 import webbrowser
 import datetime
@@ -28,7 +29,7 @@ ROOT_DIR = os.getcwd()
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
-    level=logging.DEBUG,
+    level=logging.ERROR,
     datefmt='%Y-%m-%d %H:%M:%S')
 
 if 'redundancies' not in os.listdir():
@@ -44,6 +45,7 @@ if platform.system() == "Darwin":
     mac = True
 if platform.system() == "Windows":
     windows = True
+    edge_registered = False
 if platform.system() == "Linux":
     linux = True
 
@@ -126,7 +128,7 @@ def record_audio(ask=False):
 
 def monday_speak(audio_string):
     audio_string = str(audio_string)
-    tts = gTTS(text=audio_string, lang='en')
+    tts = gTTS(text=audio_string, lang='en-gb')
     r = random.randint(1,20000000)
     audio_file = 'audio-' + str(r) + '.mp3'
     tts.save(audio_file)
@@ -159,6 +161,9 @@ def respond(voice_data):
 
     # greetings, introductions, and pleasantries #
     ##############################################
+
+    if there_exists(["what is the weather","what is the temperature","how cold is it","how hot is it"]):
+        current_weather()
     
     if there_exists(["what can you do","what's your functionality","your systems", "your functions", "what you do"]):
         functions_list()
@@ -281,6 +286,11 @@ def respond(voice_data):
     # Monday program functions & program routines #
     ###############################################
 
+    if 'backup' in voice_data or 'back up' in voice_data and 'your source code' in voice_data:
+        shutil.copyfile('monday.py', 'redundancies/monday_copy.txt')
+        shutil.copyfile('monday.py', 'redundancies/monday_copy.py')
+        monday_speak('My source code backup is now current')
+
     if 'update dependencies file' in voice_data:
         update_dependancies_file()
     if there_exists(['shut down', 'exit', 'power down', 'initiate shutdown']):
@@ -309,10 +319,17 @@ def respond(voice_data):
 
 
 def bsearch(query, google=False, url=False):
+    if windows:
+        edge_path = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+        webbrowser.register('edge', None,webbrowser.BackgroundBrowser(edge_path))
+        edge = True
     if google == True:
         try:
             google_url = f'https://www.google.com/search?q={query}'
-            webbrowser.get().open(google_url)
+            if edge:
+                webbrowser.get('edge').open(google_url)
+            else:
+                webbrowser.get().open(google_url)
             monday_speak(f'Searching Google for {query}')
         except Exception as e:
             print(f'Error: {e}')
@@ -541,7 +558,8 @@ def access_config_file():
     """ Access the settings like HOME SERVER so that only this file needs to be
         changed in the event of a move or hardware/software revamp 
         e.g. Local/Public IP, SSH config, Home Server connection settings
-    """  
+    """
+    pass
 
 def clear_temporary_files():
     for f in os.listdir():
@@ -579,12 +597,18 @@ def clear_reminders():
 def dictate_wikipedia(article):
     pass
 
+def current_weather():
+    APIKEY = '1db843324b9dc2c6437638d6be0aefc6'
+    r = requests.get(f'http://api.openweathermap.org/data/2.5/weather?q=Santa%20Monica&appid={APIKEY}&units=imperial')
+    data = r.json()
+    temp = int(data['main']['temp'])
+    monday_speak(f'It is {str(temp)} degrees outside')
 
 def morning_routines(task_rem=False):
     today = datetime.date.today()
     monday_speak(f'Today is {today.strftime("%B %d, %Y")}')
     if task_rem == True:
-        monday_speak('Please don\'t forget to perform India Entertainment search contract. ')
+        monday_speak('Please don\'t forget to keep my source code open for constant updates. ')
 
 # Monday program routines #
 ###########################
@@ -630,7 +654,7 @@ def update_dependancies_file():
 
 
 def monday_program_db_connect():
-    print('Opening connectin to Monday DB')
+    print('Connecting to Monday DB')
     #logging.INFO('Initiating mnd.db connection')
     conn = None
     try:
