@@ -216,7 +216,12 @@ def respond(voice_data):
     #     work_summary(action='end')
     #     monday_speak('Work summary is closed')
 
-    if 'go to' and 'directory' in voice_data:
+    if 'go to' in voice_data or 'change' in voice_data and 'directory' in voice_data:
+        if 'index' in voice_data:
+            index_src = True
+            _index = voice_data.split('index')[1]
+        else:
+            index_src = False
         _dir = voice_data.split('go to')[1].split('directory')[0].strip()
         if 'root' in _dir or 'route' in _dir:
             monday_speak(f'Changing current directory to in-scope root')
@@ -224,10 +229,10 @@ def respond(voice_data):
         if 'your' in _dir:
             monday_speak(f'Changing current location to my root directory')
             _chdir(_dir='_Monday')
-        if 'index' in _dir:
+        if index_src:
             try:
                 index = int(_dir.split(' ')[1])
-                _chdir(_dir=index)
+                _chdir(_dir=_index)
             except:
                 monday_speak(f'I didn\'t hear the directory index')
         else:
@@ -259,14 +264,21 @@ def respond(voice_data):
     if 'list directories' in voice_data:
         _ls()
 
+    if 'what directory' in voice_data:
+        monday_speak(f'My file system cursor is in the {os.path.split(os.getcwd())[-1]} directory')
+
     if 'update' and 'remote repositories' in voice_data:
         monday_speak('Connecting to remote servers')
         if 'with all files' in voice_data:
             update_remote_repository(voice_data, all=True)
             monday_speak('Updated remote repository with all files')
+        if 'in current' in voice_data:
+            update_remote_repository(voice_data)
+            pwd = os.path.split(os.getcwd())[-1]
+            monday_speak(f'Updated remote repository with all files in {pwd} dirctory')
         else:
             update_remote_repository(voice_data)
-            monday_speak('Updated remote repository with my program file')
+            monday_speak('Updated remote repository with my program files')
 
     # if 'sync local' and 'repository'in voice_data:
     #     monday_speak('Pulling my program files from remote servers')
