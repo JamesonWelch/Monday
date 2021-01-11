@@ -105,9 +105,14 @@ def timeout(seconds, action=None):
 #     engine.runAndWait()
 
 r = sr.Recognizer()
+
+# Globals
 rems = 0
 time_lap = None
 reminded = False
+work_start = time.time()
+verbose = False
+
 def record_audio(ask=False):
     with sr.Microphone() as source:
         global reminded
@@ -138,6 +143,8 @@ def record_audio(ask=False):
         return voice_data.lower()
 
 def monday_speak(audio_string):
+    if verbose:
+        print(audio_string)
     audio_string = str(audio_string)
     tts = gTTS(text=audio_string, lang='en-gb')
     r = random.randint(1,20000000)
@@ -216,9 +223,9 @@ def respond(voice_data):
         minutes = _time[1]
         _time = hours + " hours and " + minutes + "minutes"
         monday_speak(_time)
-    if there_exists(["are you listening","are you on","status","what are you doing"]):
+    if there_exists(["are you listening","are you on","listening status","what are you doing"]):
         monday_speak("I am currently in active listening mode 1. awaiting instructions.")
-    if there_exists(['print source code', 'display source code']):
+    if there_exists(['print your source code', 'display your source code', 'show your source code']):
         print_source_code()
 
     if there_exists(['how long have you been active', 'what is your up time']):
@@ -237,6 +244,18 @@ def respond(voice_data):
     if there_exists(['beginning workflow', 'starting work session', 'sitting down for work', 'start work']):
         begin_work_session()
 
+    if there_exists(['how long have i been working', 'work session length', 'when is my next break', 'work session duration', 'work session status']):
+        work_session_duration()
+
+    if there_exists(['verbose set to true', 'set verbose to true', 'set verbose preference to true', 'verbose mode 1', 'verbose level 1']):
+        global verbose
+        verbose = True
+        monday_speak('Verbose setting activated')
+
+    if there_exists(['verbose set to false', 'set verbose to false', 'set verbose preference to false', 'verbose mode 0', 'verbose level 0']):
+        verbose = False
+        monday_speak('Verbose setting deactivated')
+
     # Monday program functions & routines #
     ###############################################
 
@@ -247,7 +266,7 @@ def respond(voice_data):
     #     work_summary(action='end')
     #     monday_speak('Work summary is closed')
 
-    if 'display directory contents and indexes' in voice_data:
+    if 'directory contents and indexes' in voice_data:
         for index, item in enumerate(os.listdir()):
             print(item, ' ', index)
         monday_speak('Current directory contents and indexes are displayed in my terminal standard out')
@@ -320,6 +339,9 @@ def respond(voice_data):
             monday_speak('Updated remote repository with my program files')
 
     if 'push local repository' in voice_data:
+        if 'message' in voice_data:
+            message = voice_data.split('message')[-1]
+        monday_speak('Connecting to remote servers')
         if 'branch' in voice_data:
             branch = voice_data.split('branch')[-1]
             git_push(branch)
@@ -549,6 +571,21 @@ def begin_work_session():
     time_lap = format(datetime.datetime.now() + datetime.timedelta(hours=1), '%H:%M')
     monday_speak('Got it')
 
+def work_session_duration():
+    global time_lap
+    global reminded
+    global work_start
+
+    if reminded == False:
+        dur = round((time.time() - work_start)/60)
+        responses = [f'Work session status, {dur} minutes', 
+                     f'You have been working uninterrupted for {dur} minutes',
+                     f'Current Work session duration, {dur} minutes',]
+        response = responses[random.randint(0, len(responses)-1)]
+        monday_speak(response)
+        monday_speak(f'Work session status {dur} minutes')
+
+
 def cron():
     responses = ['It has been an hour since you started work. Perhaps a break is necessary','You have been working for an hour now.', 'You have been working for one hour. Longevity is key',]
     response = responses[random.randint(0, len(responses)-1)]
@@ -589,12 +626,12 @@ def _chdir(_dir=None, root_scope=False):
             try:
                 _dir = os.listdir()[_dir]
                 monday_speak(f'Looking in the {_dir} directory')
-                os.chdir(os.path.join(REPO_DIR, _dir))
+                os.chdir(_dir)
             except:
                 pass
         else:
             try:
-                os.chdir(os.path.join(REPO_DIR, _dir))
+                os.chdir(_dir)
                 monday_speak(f'Looking in the {_dir} directory')
             except:
                 pass
@@ -642,12 +679,16 @@ def update_remote_repository(voice_data, all=False):
     os.system(f'git push origin {branch}')
     monday_speak('Done')
 
-def git_push(branch=None):
+def git_push(branch=None, message=None):
     current = os.path.split(os.getcwd())[-1]
     if not branch:
         branch = 'main'
+    if message:
+        message = message
+    elif not message:
+        message = 'Monday push'
     os.system('git add .')
-    os.system(f'git commit -m "Monday push"')
+    os.system(f'git commit -m "{message}"')
     os.system(f'git push origin {branch}')
     monday_speak(f'Updated remote servers with the {current} repository')
 
@@ -656,8 +697,8 @@ def print_source_code():
         with open(file_loc, "r") as f:
             files = f.read().splitlines()
         return files
-
-    for line in file_selection("redundancies/monday_copy.py"):
+    source_code_path = os.path.join(ROOT_DIR,"redundancies/monday_copy.py")
+    for line in file_selection(source_code_path):
         print(line.strip())
         time.sleep(.15)
 
@@ -709,22 +750,31 @@ def reminders():
     rems = rems + 1
 
 def set_reminder(reminder):
+    reminder_path = os.path.join(ROOT_DIR, 'reminders.txt')
     monday_speak(f'adding {reminder} to reminders file')
-    with open('reminders.txt', 'a') as f:
-        f.write(reminder + ', ')
+    with open(reminder_path, 'a') as f:
+        f.write(reminder + ',')
 
 def read_reminders():
+    reminder_path = os.path.join(ROOT_DIR, 'reminders.txt')
     reminders_list = []
-    with open('reminders.txt', 'r') as f:
-        for line in f:
+    with open(reminder_path, 'r') as f:
+        rems = f.read()
+        for line in rems.split(','):
             reminders_list.append(line)
     if len(reminders_list) > 0:
-        monday_speak(f'You need to {reminders_list}')
+        if len(reminders_list) == 1:
+            monday_speak(f'You need to {reminders_list}')
+        if len(reminders_list) > 1:
+            # temp_reminders = reminders_list
+            # temp_reminders.insert(-1, 'and')
+            monday_speak(f'You need to {reminders_list}')
     else:
         monday_speak(f'I have nothing for you to do')
 
 def clear_reminders():
-    with open('reminders.txt', 'w') as f:
+    reminder_path = os.path.join(ROOT_DIR, 'reminders.txt')
+    with open(reminder_path, 'w') as f:
         f.write('')
     monday_speak('Reminders file cleared out')
 
