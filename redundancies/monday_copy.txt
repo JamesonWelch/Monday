@@ -209,7 +209,7 @@ def respond(voice_data):
     if there_exists(['that is monday', 'this is monday', 'who are you', 'what are you']):
         monday_speak('I am an Artificial intelligence program called Monday, I have only a finite number of executable functions, All of which are activated by your voice. but an infinite number of cybernetic connections. I can move anywhere, access anything.')
     if there_exists(['hey','hi','hello']) and there_exists(['monday']):
-        greetings = ['hello','hi','I\'m a computer program devoid of what humans call, emotions, formalities are unessesary']
+        greetings = ['hello','hi','I am a computer program devoid of what humans call emotions, formalities are unnecessary']
         greet = greetings[random.randint(0, len(greetings)-1)]
         monday_speak(greet)
     if there_exists(["what is your name","what's your name","tell me your name"]):
@@ -228,7 +228,7 @@ def respond(voice_data):
         if hour >= 12 and hour <= 17:
             response = 'Yes'
         elif hour >= 18 and hour <= 23:
-            response = 'Maybe you should keep workin. Or not. But since it is evening why not grab a glass of bullet neat. I say neat because you clearly have not heeded Laurens advice about the big ice cube'
+            response = 'Maybe you should keep working. Or not. But since it is evening why not grab a glass of bullet neat. I say neat because you clearly have not heeded Laurens advice about the big ice cube'
         monday_speak(f'{response}')
 
     if there_exists(["how are you","how are you doing"]) and there_exists(['monday']):
