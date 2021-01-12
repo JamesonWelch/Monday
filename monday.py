@@ -279,30 +279,30 @@ def respond(voice_data):
             print(item, ' ', index)
         monday_speak('Current directory contents and indexes are displayed in my terminal standard out')
 
-    if 'go to' in voice_data or 'change' in voice_data and 'directory' in voice_data:
+    if 'go to' in voice_data and 'directory' in voice_data:
+        _dir = voice_data.split('go to')[1].split('directory')[0].strip()
         if 'index' in voice_data:
             index_src = True
             _index = voice_data.split('index')[1]
-        else:
-            index_src = False
-        _dir = voice_data.split('go to')[1].split('directory')[0].strip()
-        if 'root' in _dir or 'route' in _dir:
-            monday_speak(f'Changing current directory to in-scope root')
-            _chdir(root_scope=True)
-        if 'your' in _dir:
-            monday_speak(f'Changing current location to my root directory')
-            _chdir(_dir='_Monday')
-        if index_src:
             try:
                 # index = int(_dir.split(' ')[1])
                 _chdir(_dir=int(_index))
             except Exception as e:
                 print(e)
                 monday_speak(f'I didn\'t hear the directory index')
+        if 'repository' in _dir:
+            monday_speak(f'Changing current directory to in-scope root')
+            _chdir(root_scope=True)
+        if 'your' in _dir:
+            monday_speak(f'Changing current location to my root directory')
+            _chdir(_dir='_Monday')
         else:
             _dir.replace(' ', '')
             monday_speak(f'Changing current directory to {_dir}')
             _chdir(_dir=_dir)
+
+    # if 'go to repository directory' in voice_data:
+    #     _chdir(root_scope=True)
 
     if 'go back one level' in voice_data:
         try:
@@ -832,6 +832,14 @@ def current_weather():
 
 def morning_routines(task_rem=False):
     today = datetime.date.today()
+    hour = datetime.datetime.now().hour
+    if hour >= 0 and hour <= 11:
+        greeting = 'good morning'
+    if hour >= 12 and hour <= 17:
+        greeting = 'good afternoon'
+    elif hour >= 18 and hour <= 23:
+        greeting = 'good evening'
+    monday_speak(f'{greeting}')
     monday_speak(f'Today is {today.strftime("%B %d, %Y")}')
     if task_rem == True:
         monday_speak('Please don\'t forget to keep my source code open for constant updates. ')
