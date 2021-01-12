@@ -231,6 +231,9 @@ def respond(voice_data):
             response = 'Maybe you should keep working. Or not. But since it is evening why not grab a glass of bullet neat. I say neat because you clearly have not heeded Laurens advice about the big ice cube'
         monday_speak(f'{response}')
 
+    if there_exists(['what should i do', 'i don\'t know what to do']):
+        read_monday_feature_queue(_random=True)
+
     if there_exists(["how are you","how are you doing"]) and there_exists(['monday']):
         monday_speak("I exist in 1's and 0's. You do the math. The math is binary - that is, base 2, not base 10 by the way")
     if there_exists(["what's the time","tell me the time","what time is it"]):
@@ -772,20 +775,25 @@ def set_monday_feature_item(feature):
     with open(features_queue, 'a') as f:
         f.write(feature + ',')
 
-def read_monday_feature_queue():
-    features_queue = os.path.join(ROOT_DIR, 'monday_feature_queue.txt')
-    features_queue_list = []
+def read_monday_feature_queue(_random=False):
+    reminder_path = os.path.join(ROOT_DIR, 'monday_feature_queue.txt')
+    features_queue = []
     with open(reminder_path, 'r') as f:
         features = f.read()
-        for line in rems.split(','):
+        for line in features.split(','):
             features_queue.append(line)
+    print(features_queue)
+    if _random:
+        response = random.choice(features_queue)
+        monday_speak(f'you could update my system features by attending to the queue. how about {response}')
+        return
     if len(features_queue) > 0:
         if len(features_queue) == 1:
-            monday_speak(f'You need to {features_queue}')
+            monday_speak(f'You need to build the functionality for {features_queue}')
         if len(features_queue) > 1:
             # temp_reminders = reminders_list
             # temp_reminders.insert(-1, 'and')
-            monday_speak(f'You need to {features_queue}')
+            monday_speak(f'You need to build the functionality for {features_queue}')
     else:
         monday_speak(f'I have nothing for you to do')
 
