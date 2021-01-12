@@ -334,7 +334,7 @@ def respond(voice_data):
         monday_speak(f'My file system cursor is in the {os.path.split(os.getcwd())[-1]} directory')
 
     if 'update' in voice_data and 'remote repositories' in voice_data or 'remote repository' in voice_data:
-        monday_speak('Connecting to remote servers')
+        monday_speak('Connecting to the remote servers')
         if 'with all files' in voice_data:
             update_remote_repository(voice_data, all=True)
             monday_speak('Updated remote repository with all files')
@@ -668,7 +668,7 @@ def update_remote_repository(voice_data, all=False):
         m = 'Monday Commit'
     if 'branch' in voice_data:
         branch = voice_data.split('branch')[1]
-        monday_speak(f'in the {branch} branch')
+        monday_speak(f'Attempting digital hand shake with the {branch} branch')
     else: 
         branch = 'master'
     if all == True:
