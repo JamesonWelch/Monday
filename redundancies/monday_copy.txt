@@ -668,7 +668,7 @@ def update_remote_repository(voice_data, all=False):
         m = 'Monday Commit'
     if 'branch' in voice_data:
         branch = voice_data.split('branch')[1]
-        monday_speak(f'Branch: {branch}')
+        monday_speak(f'in the {branch} branch')
     else: 
         branch = 'master'
     if all == True:
