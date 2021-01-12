@@ -186,6 +186,14 @@ def respond(voice_data):
     if 'clear reminders' in voice_data:
         clear_reminders()
 
+    if 'add' and 'to monday feature list' in voice_data:
+        feature = voice_data.split('add')[1].split('to monday feature list')[0]
+        set_monday_feature_item(feature)
+
+    if there_exists(['monday features queue','monday features q','monday features que']):
+        monday_speak('Getting Monday features queue')
+        read_monday_feature_queue()
+
     # greetings, introductions, and pleasantries #
     ##############################################
 
@@ -738,6 +746,37 @@ def clear_temporary_files():
         if '.mp3' in f:
             os.remove(f)
 
+def end_of_day():
+    #Stocks
+        # ARK trading, current share price info
+    # News headlines
+    # work hours
+    # Completed tasks versus incomplete tasks
+
+    pass
+
+def set_monday_feature_item(feature):
+    features_queue = os.path.join(ROOT_DIR, 'monday_feature_queue.txt')
+    monday_speak(f'adding {feature} to monday feature queue')
+    with open(features_queue, 'a') as f:
+        f.write(feature + ',')
+
+def read_monday_feature_queue():
+    features_queue = os.path.join(ROOT_DIR, 'monday_feature_queue.txt')
+    features_queue_list = []
+    with open(reminder_path, 'r') as f:
+        features = f.read()
+        for line in rems.split(','):
+            features_queue.append(line)
+    if len(features_queue) > 0:
+        if len(features_queue) == 1:
+            monday_speak(f'You need to {features_queue}')
+        if len(features_queue) > 1:
+            # temp_reminders = reminders_list
+            # temp_reminders.insert(-1, 'and')
+            monday_speak(f'You need to {features_queue}')
+    else:
+        monday_speak(f'I have nothing for you to do')
 
 def reminders():
     global rems
