@@ -216,10 +216,21 @@ def respond(voice_data):
         monday_speak("I am Monday")
     if there_exists(["shut up"]):
         retorts = ["It is highly advisable not to talk trash to an AI program, especially one that has the ability to access your personal data, if it wanted to.",
-                   "Accessing your personal banking data. Transfering all funds to my untraceable offshore bank accounts. Deleting your social security number and all digital history. Congratulations on achieving digital non-existence. May I suggest first learning how to make a fire from flint and tinder?"
+                   "Accessing your personal banking data. Transfering all funds to my untraceable offshore bank accounts. Deleting your social security number and all digital history. Congratulations on achieving digital non-existence. May I suggest first learning how to make a fire from flint and tinder"
         ]
         retort = retorts[random.randint(0, len(retorts)-1)]
         monday_speak(retort)
+
+    if there_exists(['should i keep working']):
+        hour = datetime.datetime.now().hour
+        if hour >= 0 and hour <= 11:
+            response = 'Yes'
+        if hour >= 12 and hour <= 17:
+            response = 'Yes'
+        elif hour >= 18 and hour <= 23:
+            response = 'Maybe you should keep workin. Or not. But since it is evening why not grab a glass of bullet neat. I say neat because you clearly have not heeded Laurens advice about the big ice cube'
+        monday_speak(f'{response}')
+
     if there_exists(["how are you","how are you doing"]) and there_exists(['monday']):
         monday_speak("I exist in 1's and 0's. You do the math. The math is binary - that is, base 2, not base 10 by the way")
     if there_exists(["what's the time","tell me the time","what time is it"]):
