@@ -687,7 +687,7 @@ def update_remote_repository(voice_data, all=False):
         branch = 'master'
     if all == True:
 
-        for repository in repositories:
+        for repository in os.listdir(REPO_DIR):
             os.chdir(REPO_DIR)
             if repository not in os.listdir():
                 os.system(f'git clone https://github.com/JamesonWelch/{repository}.git')
