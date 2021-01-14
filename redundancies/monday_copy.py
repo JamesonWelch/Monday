@@ -221,6 +221,11 @@ def respond(voice_data):
         retort = retorts[random.randint(0, len(retorts)-1)]
         monday_speak(retort)
 
+    if there_exists(['hurry up', 'go faster', 'what is taking so long']):
+        responses = ['perhaps increasing your equipment budget would eliminate your bottle neck', 'i can only work with the provided technology. get better stuff.','upgrade my hardware then we can talk']
+        response = responses[random.randint(0, len(responses)-1)]
+        monday_speak(response)
+
     if there_exists(['should i keep working']):
         hour = datetime.datetime.now().hour
         if hour >= 0 and hour <= 11:
@@ -338,7 +343,10 @@ def respond(voice_data):
     #     _chdir(_dir='_Monday')
 
     if there_exists(['open']):
-        program = voice_data.split('open')[1]
+        if 'code editor' in voice_data:
+            program = 'code editor'
+        else:
+            program = voice_data.split('open')[1]
         open_program(program)
 
     if 'list directories' in voice_data:
@@ -369,10 +377,10 @@ def respond(voice_data):
             git_push(branch)
         git_push()
 
-    if 'open code editor' in voice_data:
-        if windows:
-            os.system('code .')
-        monday_speak(f'Opening V S Code ')
+    # if 'open code editor' in voice_data:
+    #     if windows:
+    #         os.system('code .')
+    #     monday_speak(f'Opening V S Code ')
 
     # if 'sync local' and 'repository'in voice_data:
     #     monday_speak('Pulling my program files from remote servers')
@@ -462,9 +470,13 @@ def bsearch(query, google=False, url=False):
         monday_speak(f'Opening browser for {query}')
 
 def open_program(program):
-    monday_speak(f'Opening {program}')
-    prog = program.capitalize()
-    os.system(f'open /System/Applications/Utilities/{prog}.app')
+    if program == 'code editor':
+        os.system('code .')
+        monday_speak(f'Opening V S Code')
+    else:
+        monday_speak(f'Opening {program}')
+        prog = program.capitalize()
+        os.system(f'open /System/Applications/Utilities/{prog}.app')
 
 def task_list():
     '''
