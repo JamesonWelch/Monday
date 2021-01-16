@@ -959,13 +959,17 @@ while monday_active:
         else:
             git_push()
 
-    if there_exists(['pull local repository']):
+    if there_exists(['pull remote repository']):
+        monday_speak('Importing from git servers')
         if 'branch' in voice_data:
             branch = voice_data.split('branch')[-1]
+            git_pull(branch=branch)
         else:
-            branch = 'main'
-        monday_speak('Importing from git servers')
-        os.system(f'git pull origin {branch}')
+            git_pull()
+        monday_speak('Local repository now synchronized')
+        
+        # git_pull()
+        # os.system(f'git pull origin {branch}')
 
     if there_exists(['git status', 'repository status']):
         if 'working tree clean' in exec_stdout(['git', 'status']):
