@@ -907,6 +907,7 @@ while monday_active:
                 monday_speak('Connecting to remote servers')
                 git_push(branch)
             else:
+                monday_speak('Received')
                 monday_speak('Connecting to remote servers')
                 git_push(branch,cm_res)
         else:
