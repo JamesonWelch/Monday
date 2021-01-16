@@ -4,6 +4,7 @@ import speech_recognition as sr
 import playsound # to play an audio file
 from gtts import gTTS # google text to speech
 import speech_config
+import yaml
 import random
 import os, sys, platform, shutil
 import time
@@ -22,10 +23,9 @@ import logging
 import json
 # from apple_calendar_integration import ICloudCalendarAPI
 
-"""
-If problems installing PyAudio for Windows:
-https://stackoverflow.com/questions/52283840/i-cant-install-pyaudio-on-windows-how-to-solve-error-microsoft-visual-c-14
-"""
+
+with open('master_config.json', 'r') as f:
+    config = json.loads(f.read())
 
 ROOT_DIR = os.getcwd()
 
@@ -137,7 +137,7 @@ def receive_command(ask=False):
         except sr.UnknownValueError:
             pass
         except sr.RequestError:
-            monday_speak('I can\'t connect to my remote speech recognition servers')
+            monday_speak('I am unable to connect to my speech recognition servers')
         except sr.WaitTimeoutError:
             monday_speak('I\'m not hearing anything.')
         print('>>', voice_data.lower())
@@ -160,10 +160,11 @@ def response_polarity(voice_data):
     if there_exists(speech_config.affirm):
         return True
 
-def exec_stdout(cmd: list, module='os') -> str:
-    if module == 'os':
+def exec_stdout(cmd, module='os') -> str:
+    """ Execute command with stdout capture option """
+    if module == 'os' and isinstance(cmd,str):
         os.system(cmd)
-    elif module == 'subprocess':
+    elif module == 'subprocess' or isinstance(cmd,list):
         _out = subprocess.Popen(cmd,stdout=subprocess.PIPE).communicate()[0]
         _out = _out.decode('utf-8')
         print(_out)
@@ -175,6 +176,10 @@ def analyze_response(response_data, os_output):
     else:
         return False
 
+def update_config():
+    with open('master_config.json', 'w') as jsonfile:
+        jsonfile.write(json.dumps(config))
+    
 
 def bsearch(query, google=False, url=False):
     if windows:
@@ -442,7 +447,15 @@ def update_remote_repository(voice_data, all=False):
 def git_push(branch=None, message=None):
     current = os.path.split(os.getcwd())[-1]
     if not branch:
-        branch = 'main'
+        if current not in config['git']['repository']:
+            _stdout = exec_stdout(['git', 'branch', '-vv'])
+            branch = _stdout.split()[1]
+            config['git']['repository'].update({current:{'origin':branch}})
+            update_config()
+            monday_speak(f'updated the {current} repository configuration file with the {branch} origin branch')
+        elif current in config['git']['repository']:
+            branch = config['git']['repository'][current]['origin']
+
     if message:
         message = message
     elif not message:
@@ -451,6 +464,21 @@ def git_push(branch=None, message=None):
     os.system(f'git commit -m "{message}"')
     os.system(f'git push origin {branch}')
     monday_speak(f'Updated remote servers with the {current} repository')
+
+def git_pull(branch=None):
+    current = os.path.split(os.getcwd())[-1]
+    if not branch:
+        if current not in config['git']['repository']:
+            _stdout = exec_stdout(['git', 'branch', '-vv'])
+            branch = _stdout.split()[1]
+            config['git']['repository'].update({current:{'origin':branch}})
+            update_config()
+            monday_speak(f'updated the {current} repository configuration file with the {branch} origin branch')
+        elif current in config['git']['repository']:
+            branch = config['git']['repository'][current]['origin']
+
+    os.system(f'git pull origin {branch}')
+    monday_speak(f'Pulled remote server files from the {current} repository')
 
 def print_source_code():
     def file_selection(file_loc):
@@ -940,6 +968,9 @@ while monday_active:
         os.system(f'git pull origin {branch}')
 
     if there_exists(['git status', 'repository status']):
+        if 'working tree clean' in exec_stdout(['git', 'status']):
+            monday_speak('branch up to date')
+            
         os.system('git status')
         monday_speak("Repository status in my terminal")
 
