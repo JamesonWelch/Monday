@@ -894,6 +894,8 @@ while monday_active:
         
         elif 'branch' in voice_data:
             branch = voice_data.split('branch')[-1]
+            if branch == 'maine':
+                branch = 'main'
             monday_speak('What is the message parameter')
             cm_res = receive_command()
             if 'generic' in cm_res or 'doesn\'t matter' in cm_res:
