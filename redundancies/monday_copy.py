@@ -299,22 +299,27 @@ def respond(voice_data):
         monday_speak('Current directory contents and indexes are displayed in my terminal standard out')
 
     if 'go to' in voice_data and 'directory' in voice_data:
+        if 'the' in voice_data:
+            ''.join(voice_data.split('the'))
         _dir = voice_data.split('go to')[1].split('directory')[0].strip()
-        if 'index' in voice_data:
+        if 'your' in _dir:
+            monday_speak(f'Changing current location to my root directory')
+            _chdir(_dir='_Monday')
+        elif 'index' in voice_data:
             index_src = True
             _index = voice_data.split('index')[1]
+            if 'for' in _index:
+                _index = 4
             try:
                 # index = int(_dir.split(' ')[1])
                 _chdir(_dir=int(_index))
             except Exception as e:
                 print(e)
                 monday_speak(f'I didn\'t hear the directory index')
-        if 'repository' in _dir:
+        elif 'repository' in _dir:
             monday_speak(f'Changing current directory to in-scope root')
             _chdir(root_scope=True)
-        if 'your' in _dir:
-            monday_speak(f'Changing current location to my root directory')
-            _chdir(_dir='_Monday')
+        
         else:
             _dir.replace(' ', '')
             monday_speak(f'Changing current directory to {_dir}')
@@ -376,6 +381,10 @@ def respond(voice_data):
             branch = voice_data.split('branch')[-1]
             git_push(branch)
         git_push()
+
+    if there_exists(['git status', 'repository status']):
+        os.system('git status')
+        monday_speak("Repository status in my terminal")
 
     # if 'open code editor' in voice_data:
     #     if windows:
@@ -664,11 +673,14 @@ def _chdir(_dir=None, root_scope=False):
             except:
                 pass
         else:
-            try:
-                os.chdir(_dir)
-                monday_speak(f'Looking in the {_dir} directory')
-            except:
-                pass
+            if _dir == '_Monday':
+                os.chdir(os.path.join(REPO_DIR, '_Monday'))
+            else:
+                try:
+                    os.chdir(_dir)
+                    monday_speak(f'Looking in the {_dir} directory')
+                except:
+                    pass
         if _dir == '..':
             os.chdir(_dir)
             current = os.path.split(os.getcwd())[-1]
