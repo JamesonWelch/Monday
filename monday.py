@@ -112,6 +112,7 @@ time_lap = None
 reminded = False
 work_start = time.time()
 verbose = False
+mute = False
 
 def receive_command(ask=False):
     with sr.Microphone() as source:
@@ -143,15 +144,19 @@ def receive_command(ask=False):
         return voice_data.lower()
 
 def monday_speak(audio_string):
+    global mute
     if verbose:
         print(audio_string)
-    audio_string = str(audio_string)
-    tts = gTTS(text=audio_string, lang='en-gb')
-    r = random.randint(1,20000000)
-    audio_file = 'audio-' + str(r) + '.mp3'
-    tts.save(audio_file)
-    playsound.playsound(audio_file)
-    os.remove(audio_file)
+    if not mute:
+        audio_string = str(audio_string)
+        tts = gTTS(text=audio_string, lang='en-gb')
+        r = random.randint(1,20000000)
+        audio_file = 'audio-' + str(r) + '.mp3'
+        tts.save(audio_file)
+        playsound.playsound(audio_file)
+        os.remove(audio_file)
+    elif mute:
+        print(audio_string)
 
 
 
@@ -760,6 +765,12 @@ while monday_active:
     if there_exists(['print your source code', 'display your source code', 'show your source code']):
         print_source_code()
 
+    if there_exists(['mute']):
+        mute = True
+
+    if there_exists(['unmute']):
+        mute - False
+        
     if there_exists(['how long have you been active', 'what is your up time']):
         uptime = (time.time() - prog_start) / 60
         if uptime < 60:
