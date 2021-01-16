@@ -921,23 +921,23 @@ while monday_active:
     if 'what directory' in voice_data:
         monday_speak(f'My file system cursor is in the {os.path.split(os.getcwd())[-1]} directory')
 
-    if 'update' in voice_data and 'remote repositories' in voice_data or 'remote repository' in voice_data:
-        monday_speak('Connecting to the remote servers')
-        if 'with all files' in voice_data:
-            update_remote_repository(voice_data, all=True)
-            monday_speak('Updated remote repository with all files')
-        if 'in current' in voice_data:
-            update_remote_repository(voice_data)
-            pwd = os.path.split(os.getcwd())[-1]
-            monday_speak(f'Updated remote repository with all files in {pwd} dirctory')
-        else:
-            update_remote_repository(voice_data)
-            monday_speak('Updated remote repository with my program files')
+    # if 'update' in voice_data and 'remote repositories' in voice_data or 'remote repository' in voice_data:
+    #     monday_speak('Connecting to the remote servers')
+    #     if 'with all files' in voice_data:
+    #         update_remote_repository(voice_data, all=True)
+    #         monday_speak('Updated remote repository with all files')
+    #     if 'in current' in voice_data:
+    #         update_remote_repository(voice_data)
+    #         pwd = os.path.split(os.getcwd())[-1]
+    #         monday_speak(f'Updated remote repository with all files in {pwd} dirctory')
+    #     else:
+    #         update_remote_repository(voice_data)
+    #         monday_speak('Updated remote repository with my program files')
 
     if 'push local repository' in voice_data:
         if 'message' in voice_data:
             message = voice_data.split('message')[-1]
-            monday_speak('With default main branch?')
+            monday_speak('With default origin branch?')
             cm_res = receive_command()
             if 'yes' in cm_res:
                 monday_speak('Connecting to remote servers')

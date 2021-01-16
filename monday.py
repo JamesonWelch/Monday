@@ -937,7 +937,7 @@ while monday_active:
     if 'push local repository' in voice_data:
         if 'message' in voice_data:
             message = voice_data.split('message')[-1]
-            monday_speak('With default main branch?')
+            monday_speak('With default origin branch?')
             cm_res = receive_command()
             if 'yes' in cm_res:
                 monday_speak('Connecting to remote servers')
