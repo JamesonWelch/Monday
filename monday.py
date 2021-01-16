@@ -886,12 +886,15 @@ while monday_active:
             if 'yes' in cm_res:
                 monday_speak('Connecting to remote servers')
                 git_push(message=message)
-            else:
+            elif 'no' in cm_res or 'the' in cm_res:
                 cm_res = cm_res.split('no')[-1]
                 cm_res = cm_res.split('the')[-1]
                 branch = cm_res.split('branch')[-1]
                 monday_speak('Connecting to remote servers')
                 git_push(branch, message)
+            else:
+                monday_speak('Connecting to remote servers')
+                git_push(message=message)
         
         elif 'branch' in voice_data:
             branch = voice_data.split('branch')[-1]
