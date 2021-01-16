@@ -3,6 +3,7 @@
 import speech_recognition as sr
 import playsound # to play an audio file
 from gtts import gTTS # google text to speech
+import speech_config
 import random
 import os, sys, platform, shutil
 import time
@@ -153,10 +154,28 @@ def monday_speak(audio_string):
     playsound.playsound(audio_file)
     os.remove(audio_file)
 
+def response_polarity(voice_data):
+    response = subprocess.Popen('ls', stdout=subprocess.PIPE).communicate()[0].decode('utf-8')
+    if there_exists(speech_config.deny):
+        return False
+    if there_exists(speech_config.affirm):
+        return True
 
+def _stdout(cmd: list, module='os') -> str:
+    if module == 'os':
+        os.system(cmd)
+    elif moduel == 'subprocess':
+        _out = subprocess.Popen(cmd,stdout=subprocess.PIPE).communicate()[0]
+        _out = _out.decode('utf-8')
+        print(_out)
+        return _out
 
-def respond(voice_data):
-    pass
+def analyze_response(response_data, os_output):
+    if response_data in os_output:
+        return True
+    else:
+        return False
+
 
 def bsearch(query, google=False, url=False):
     if windows:
@@ -912,6 +931,14 @@ while monday_active:
                 git_push(branch,cm_res)
         else:
             git_push()
+
+    if there_exists(['pull local repository']):
+        if 'branch' in voice_data:
+            branch = voice_data.split('branch')[-1]
+        else:
+            branch = 'main'
+        monday_speak('Importing from git servers')
+        os.system(f'git pull origin {branch}')
 
     if there_exists(['git status', 'repository status']):
         os.system('git status')
