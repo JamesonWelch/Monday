@@ -4,7 +4,6 @@ import speech_recognition as sr
 import playsound # to play an audio file
 from gtts import gTTS # google text to speech
 import speech_config
-import yaml
 import random
 import os, sys, platform, shutil
 import time
