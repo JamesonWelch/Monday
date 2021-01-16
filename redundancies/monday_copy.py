@@ -886,8 +886,9 @@ while monday_active:
             if 'yes' in cm_res:
                 monday_speak('Connecting to remote servers')
                 git_push(message=message)
-            elif 'no' in cm_res:
+            else:
                 cm_res = cm_res.split('no')[-1]
+                cm_res = cm_res.split('the')[-1]
                 branch = cm_res.split('branch')[-1]
                 monday_speak('Connecting to remote servers')
                 git_push(branch, message)
