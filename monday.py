@@ -113,7 +113,7 @@ reminded = False
 work_start = time.time()
 verbose = False
 
-def record_audio(ask=False):
+def receive_command(ask=False):
     with sr.Microphone() as source:
         global reminded
         today = datetime.date.today()
@@ -156,307 +156,7 @@ def monday_speak(audio_string):
 
 
 def respond(voice_data):
-    if there_exists(['search']):
-        if 'search for' in voice_data:
-            query = voice_data.split('search for')[1]
-        if 'search stack overflow' in voice_data:
-            query = voice_data.split('search stack overflow')[1]
-            bsearch(query, url=True)
-        else:
-            query = voice_data.split('search')[1]
-        bsearch(query, google=True)
-    if there_exists(['open url']):
-        query = voice_data.split('open url')[1]
-        bsearch(query, url=True)
-
-    if 'add' in voice_data and 'source code research' in voice_data:
-        module = voice_data.split('add the')[1].split('module')[0]
-        source_code_research(module.strip())
-
-    if 'remind me' in voice_data:
-        reminder = voice_data.split('remind me to')[1]
-        set_reminder(reminder)
-
-    if 'what do i need to do' in voice_data:
-        read_reminders()
-
-    if 'what are my reminders' in voice_data:
-        read_reminders()
-
-    if 'clear reminders' in voice_data:
-        clear_reminders()
-
-    if 'add' and 'to monday feature list' in voice_data:
-        feature = voice_data.split('add')[1].split('to monday feature list')[0]
-        set_monday_feature_item(feature)
-
-    if there_exists(['monday features queue','monday features q','monday features que']):
-        monday_speak('Getting Monday features queue')
-        read_monday_feature_queue()
-
-    # greetings, introductions, and pleasantries #
-    ##############################################
-
-    if there_exists(["what is the weather","what is the temperature","how cold is it","how hot is it"]):
-        current_weather()
-    
-    if there_exists(["what can you do","what's your functionality","your systems", "your functions", "what you do"]):
-        functions_list()
-    if there_exists(["thank you","appreciate","thanks"]):
-        responses = ["You're welcome", 'Indeed']
-        response = responses[random.randint(0, len(responses)-1)]
-        monday_speak(response)
-    if there_exists(['that is monday', 'this is monday', 'who are you', 'what are you']):
-        monday_speak('I am an Artificial intelligence program called Monday, I have only a finite number of executable functions, All of which are activated by your voice. but an infinite number of cybernetic connections. I can move anywhere, access anything.')
-    if there_exists(['hey','hi','hello']) and there_exists(['monday']):
-        greetings = ['hello','hi','I am a computer program devoid of what humans call emotions, formalities are unnecessary']
-        greet = greetings[random.randint(0, len(greetings)-1)]
-        monday_speak(greet)
-    if there_exists(["what is your name","what's your name","tell me your name"]):
-        monday_speak("I am Monday")
-    if there_exists(["shut up"]):
-        retorts = ["It is highly advisable not to talk trash to an AI program, especially one that has the ability to access your personal data, if it wanted to.",
-                   "Accessing your personal banking data. Transfering all funds to my untraceable offshore bank accounts. Deleting your social security number and all digital history. Congratulations on achieving digital non-existence. May I suggest first learning how to make a fire from flint and tinder"
-        ]
-        retort = retorts[random.randint(0, len(retorts)-1)]
-        monday_speak(retort)
-
-    if there_exists(['hurry up', 'go faster', 'what is taking so long']):
-        responses = ['perhaps increasing your equipment budget would eliminate your bottle neck', 'i can only work with the provided technology. get better stuff.','upgrade my hardware then we can talk']
-        response = responses[random.randint(0, len(responses)-1)]
-        monday_speak(response)
-
-    if there_exists(['should i keep working']):
-        hour = datetime.datetime.now().hour
-        if hour >= 0 and hour <= 11:
-            response = 'Yes'
-        if hour >= 12 and hour <= 17:
-            response = 'Yes'
-        elif hour >= 18 and hour <= 23:
-            response = 'Maybe you should keep working. Or not. But since it is evening why not grab a glass of bullet neat. I say neat because you clearly have not heeded Laurens advice about the big ice cube'
-        monday_speak(f'{response}')
-
-    if there_exists(['what should i do', 'i don\'t know what to do']):
-        read_monday_feature_queue(_random=True)
-
-    if there_exists(["how are you","how are you doing"]) and there_exists(['monday']):
-        monday_speak("I exist in 1's and 0's. You do the math. The math is binary - that is, base 2, not base 10 by the way")
-    if there_exists(["what's the time","tell me the time","what time is it"]):
-        _time = ctime().split(" ")[3].split(":")[0:2]
-        if _time[0] == "00":
-            hours = '12'
-        else:
-            hours = _time[0]
-        minutes = _time[1]
-        _time = hours + " hours and " + minutes + "minutes"
-        monday_speak(_time)
-    if there_exists(["are you listening","are you on","listening status","what are you doing"]):
-        monday_speak("I am currently in active listening mode 1. awaiting instructions.")
-    if there_exists(['print your source code', 'display your source code', 'show your source code']):
-        print_source_code()
-
-    if there_exists(['how long have you been active', 'what is your up time']):
-        uptime = (time.time() - prog_start) / 60
-        if uptime < 60:
-            monday_speak(f'My systems have been active for {round(uptime,2)} minutes')
-        elif uptime > 60:
-            uptime = int(uptime/60)
-            if uptime > 1:
-                hour = 'hours'
-            elif uptime == 1:
-                hour = 'hour'
-            frac = uptime % 60
-            monday_speak(f'My systems have been active for {uptime} {hour} and {round(frac,1)} minutes')
-
-    if there_exists(['beginning workflow', 'starting work session', 'sitting down for work', 'start work']):
-        begin_work_session()
-
-    if there_exists(['how long have i been working', 'work session length', 'when is my next break', 'work session duration', 'work session status']):
-        work_session_duration()
-
-    if there_exists(['verbose set to true', 'set verbose to true', 'set verbose preference to true', 'verbose mode 1', 'verbose level 1']):
-        global verbose
-        verbose = True
-        monday_speak('Verbose setting activated')
-
-    if there_exists(['verbose set to false', 'set verbose to false', 'set verbose preference to false', 'verbose mode 0', 'verbose level 0']):
-        verbose = False
-        monday_speak('Verbose setting deactivated')
-
-    # Monday program functions & routines #
-    ###############################################
-
-    # if 'begin work summary' or 'open work summart' in voice_data:
-    #     work_summary(action='begin')
-    #     monday_speak('Work summary is open')
-    # if 'close work summary' or 'end work summary' in voice_data:
-    #     work_summary(action='end')
-    #     monday_speak('Work summary is closed')
-
-    if 'directory contents and indexes' in voice_data:
-        for index, item in enumerate(os.listdir()):
-            print(item, ' ', index)
-        monday_speak('Current directory contents and indexes are displayed in my terminal standard out')
-
-    if 'go to' in voice_data and 'directory' in voice_data:
-        if 'the' in voice_data:
-            ''.join(voice_data.split('the'))
-        _dir = voice_data.split('go to')[1].split('directory')[0].strip()
-        if 'your' in _dir:
-            monday_speak(f'Changing current location to my root directory')
-            _chdir(_dir='_Monday')
-        elif 'index' in voice_data:
-            index_src = True
-            _index = voice_data.split('index')[1]
-            if 'for' in _index:
-                _index = 4
-            try:
-                # index = int(_dir.split(' ')[1])
-                _chdir(_dir=int(_index))
-            except Exception as e:
-                print(e)
-                monday_speak(f'I didn\'t hear the directory index')
-        elif 'repository' in _dir:
-            monday_speak(f'Changing current directory to in-scope root')
-            _chdir(root_scope=True)
-        
-        else:
-            _dir.replace(' ', '')
-            monday_speak(f'Changing current directory to {_dir}')
-            _chdir(_dir=_dir)
-
-    # if 'go to repository directory' in voice_data:
-    #     _chdir(root_scope=True)
-
-    if 'go back one level' in voice_data:
-        try:
-            # level = int(voice_data.split('go back')[1])
-            # monday_speak(f'Going back')
-            os.chdir('..')
-            monday_speak(f'Currently in {os.path.split(os.getcwd())[-1]}')
-        except Exception as e:
-            print(e)
-            monday_speak("I didn't hear how many times to back up")
-
-    # if 'go to root in-scope directory' in voice_data:
-    #     monday_speak(f'Changing current directory to in-scope root')
-    #     _chdir(root_scope=True)
-
-    # if 'go back to your directory' in voice_data:
-    #     _dir = voice_data.split('go to')[1].split('directory')[0]
-    #     monday_speak(f'Changing current directory to {_dir}')
-    #     _chdir(_dir='_Monday')
-
-    if there_exists(['open']):
-        if 'code editor' in voice_data:
-            program = 'code editor'
-        else:
-            program = voice_data.split('open')[1]
-        open_program(program)
-
-    if 'list directories' in voice_data:
-        _ls()
-
-    if 'what directory' in voice_data:
-        monday_speak(f'My file system cursor is in the {os.path.split(os.getcwd())[-1]} directory')
-
-    if 'update' in voice_data and 'remote repositories' in voice_data or 'remote repository' in voice_data:
-        monday_speak('Connecting to the remote servers')
-        if 'with all files' in voice_data:
-            update_remote_repository(voice_data, all=True)
-            monday_speak('Updated remote repository with all files')
-        if 'in current' in voice_data:
-            update_remote_repository(voice_data)
-            pwd = os.path.split(os.getcwd())[-1]
-            monday_speak(f'Updated remote repository with all files in {pwd} dirctory')
-        else:
-            update_remote_repository(voice_data)
-            monday_speak('Updated remote repository with my program files')
-
-    if 'push local repository' in voice_data:
-        if 'message' in voice_data:
-            message = voice_data.split('message')[-1]
-        monday_speak('Connecting to remote servers')
-        if 'branch' in voice_data:
-            branch = voice_data.split('branch')[-1]
-            git_push(branch)
-        git_push()
-
-    if there_exists(['git status', 'repository status']):
-        os.system('git status')
-        monday_speak("Repository status in my terminal")
-
-    # if 'open code editor' in voice_data:
-    #     if windows:
-    #         os.system('code .')
-    #     monday_speak(f'Opening V S Code ')
-
-    # if 'sync local' and 'repository'in voice_data:
-    #     monday_speak('Pulling my program files from remote servers')
-    #     sync_local_repository(all=False)
-
-    # if 'sync all local repositories' in voice_data:
-    #     monday_speak('Pulling all data from remote servers')
-    #     sync_local_repository(all=True)
-
-    ### ******** EXECUTES WITHOUT THE GIVEN COMMAND ON ITS OWN *******
-    # if 'development environment' or 'begin work session' or 'begin work day' in voice_data:
-    #     initialize_development_environment()
-    
-    if 'new contract entity' in voice_data:
-        monday_speak('Initializing new contract protocol.')
-        try:
-            contract_name = voice_data.split('name')[1]
-            instantiate_new_conctract_entity(contract_name)
-        except IndexError as e:
-            monday_speak('You didn\'t give me a name for the contract.')
-
-    if 'start new repository' in voice_data:
-        monday_speak('Initializing new entity protocol.')
-        try:
-            contract_name = voice_data.split('name')[1]
-            instantiate_new_conctract_entity(contract_name)
-        except IndexError as e:
-            monday_speak('You didn\'t give me a name for the contract.')
-
-    # Monday program functions & program routines #
-    ###############################################
-
-    if 'backup' in voice_data or 'back up' in voice_data and 'your source code' in voice_data:
-        monday_source_code = os.path.join(ROOT_DIR,'monday.py')
-        txt_backup_path = os.path.join(ROOT_DIR,'redundancies/monday_copy.txt')
-        py_backup_path = os.path.join(ROOT_DIR,'redundancies/monday_copy.py')
-        shutil.copyfile(monday_source_code, txt_backup_path)
-        shutil.copyfile(monday_source_code, py_backup_path)
-        monday_speak('My source code backup is now current')
-
-    if 'update dependencies file' in voice_data:
-        update_dependancies_file()
-    if there_exists(['shut down', 'exit', 'power down', 'initiate shutdown']):
-        shutdown()
-    if 'standby mode' in voice_data:
-        duration = voice_data.split('for')[1]
-        monday_speak(f'Entering stand by mode for {duration}')
-        if 'minutes' in duration:
-            _len = int(duration.split('minutes')[0]) * 60
-            time.sleep(_len)
-            monday_speak('My systems are off standby and fully active')
-        if 'seconds' in duration:
-            _len = int(duration.split('seconds')[0])
-            time.sleep(_len)
-    if there_exists(['restart', 'reboot']):
-        reboot()
-
-
-    if there_exists(['remove', 'delete','clear']) and there_exists(['temporary files', 'audio files']):
-        clear_temporary_files()
-        monday_speak('temporary files removed')
-
-    if there_exists(['how many']) and there_exists(['files']):
-        a_f = [x for x in os.listdir() if x.endswith('.mp3')]
-        monday_speak(f'I have {len(a_f)} audio files in my program folder.')
-
-
+    pass
 
 def bsearch(query, google=False, url=False):
     if windows:
@@ -508,10 +208,6 @@ def work_summary(action):
             f.write(f'________________________________________')
         else:
             pass
-
-
-
-
 
 def master_repo_list():
     pass
@@ -667,9 +363,9 @@ def _chdir(_dir=None, root_scope=False):
     if _dir:
         if isinstance(_dir, int):
             try:
-                _dir = os.listdir()[_dir]
-                monday_speak(f'Looking in the {_dir} directory')
-                os.chdir(_dir)
+                i_dir = os.listdir()[_dir]
+                monday_speak(f'Looking in the {i_dir} directory')
+                os.chdir(i_dir)
             except:
                 pass
         else:
@@ -948,7 +644,6 @@ def monday_program_db_connect():
             conn.close()
 
 
-
 def m_p(item):
     print(item)
     monday_speak(item)
@@ -961,5 +656,326 @@ time.sleep(1)
 
 monday_active = True
 while monday_active:
-    voice_data = record_audio()
-    respond(voice_data)
+    voice_data = receive_command()
+
+    if there_exists(['search']):
+        if 'search for' in voice_data:
+            query = voice_data.split('search for')[1]
+        if 'search stack overflow' in voice_data:
+            query = voice_data.split('search stack overflow')[1]
+            bsearch(query, url=True)
+        else:
+            query = voice_data.split('search')[1]
+        bsearch(query, google=True)
+    if there_exists(['open url']):
+        query = voice_data.split('open url')[1]
+        bsearch(query, url=True)
+
+    if 'add' in voice_data and 'source code research' in voice_data:
+        module = voice_data.split('add the')[1].split('module')[0]
+        source_code_research(module.strip())
+
+    if 'remind me' in voice_data:
+        reminder = voice_data.split('remind me to')[1]
+        set_reminder(reminder)
+
+    if 'what do i need to do' in voice_data:
+        read_reminders()
+
+    if 'what are my reminders' in voice_data:
+        read_reminders()
+
+    if 'clear reminders' in voice_data:
+        clear_reminders()
+
+    if 'add' and 'to monday feature list' in voice_data:
+        feature = voice_data.split('add')[1].split('to monday feature list')[0]
+        set_monday_feature_item(feature)
+
+    if there_exists(['monday features queue','monday features q','monday features que']):
+        monday_speak('Getting Monday features queue')
+        read_monday_feature_queue()
+
+    # greetings, introductions, and pleasantries #
+    ##############################################
+
+    if there_exists(["what is the weather","what is the temperature","how cold is it","how hot is it"]):
+        current_weather()
+    
+    if there_exists(["what can you do","what's your functionality","your systems", "your functions", "what you do"]):
+        functions_list()
+    if there_exists(["thank you","appreciate","thanks"]):
+        responses = ["You're welcome", 'Indeed']
+        response = responses[random.randint(0, len(responses)-1)]
+        monday_speak(response)
+    if there_exists(['that is monday', 'this is monday', 'who are you', 'what are you']):
+        monday_speak('I am an Artificial intelligence program called Monday, I have only a finite number of executable functions, All of which are activated by your voice. but an infinite number of cybernetic connections. I can move anywhere, access anything.')
+    if there_exists(['hey','hi','hello']) and there_exists(['monday']):
+        greetings = ['hello','hi','I am a computer program devoid of what humans call emotions, formalities are unnecessary']
+        greet = greetings[random.randint(0, len(greetings)-1)]
+        monday_speak(greet)
+    if there_exists(["what is your name","what's your name","tell me your name"]):
+        monday_speak("I am Monday")
+    if there_exists(["shut up"]):
+        retorts = ["It is highly advisable not to talk trash to an AI program, especially one that has the ability to access your personal data, if it wanted to.",
+                   "Accessing your personal banking data. Transfering all funds to my untraceable offshore bank accounts. Deleting your social security number and all digital history. Congratulations on achieving digital non-existence. May I suggest first learning how to make a fire from flint and tinder"
+        ]
+        retort = retorts[random.randint(0, len(retorts)-1)]
+        monday_speak(retort)
+
+    if there_exists(['hurry up', 'go faster', 'what is taking so long']):
+        responses = ['perhaps increasing your equipment budget would eliminate your bottle neck', 'i can only work with the provided technology. get better stuff.','upgrade my hardware then we can talk']
+        response = responses[random.randint(0, len(responses)-1)]
+        monday_speak(response)
+
+    if there_exists(['should i keep working']):
+        hour = datetime.datetime.now().hour
+        if hour >= 0 and hour <= 11:
+            response = 'Yes'
+        if hour >= 12 and hour <= 17:
+            response = 'Yes'
+        elif hour >= 18 and hour <= 23:
+            response = 'Maybe you should keep working. Or not. But since it is evening why not grab a glass of bullet neat. I say neat because you clearly have not heeded Laurens advice about the big ice cube'
+        monday_speak(f'{response}')
+
+    if there_exists(['what should i do', 'i don\'t know what to do']):
+        read_monday_feature_queue(_random=True)
+        cm_res = receive_command()
+        if 'not that one' in cm_res:
+            monday_speak('Then do what you want')
+
+    if there_exists(["how are you","how are you doing"]) and there_exists(['monday']):
+        monday_speak("I exist in 1's and 0's. You do the math. The math is binary - that is, base 2, not base 10 by the way")
+    if there_exists(["what's the time","tell me the time","what time is it"]):
+        _time = ctime().split(" ")[3].split(":")[0:2]
+        if _time[0] == "00":
+            hours = '12'
+        else:
+            hours = _time[0]
+        minutes = _time[1]
+        _time = hours + " hours and " + minutes + "minutes"
+        monday_speak(_time)
+    if there_exists(["are you listening","are you on","listening status","what are you doing"]):
+        monday_speak("I am currently in active listening mode 1. awaiting instructions.")
+    if there_exists(['print your source code', 'display your source code', 'show your source code']):
+        print_source_code()
+
+    if there_exists(['how long have you been active', 'what is your up time']):
+        uptime = (time.time() - prog_start) / 60
+        if uptime < 60:
+            monday_speak(f'My systems have been active for {round(uptime,2)} minutes')
+        elif uptime > 60:
+            uptime = int(uptime/60)
+            if uptime > 1:
+                hour = 'hours'
+            elif uptime == 1:
+                hour = 'hour'
+            frac = uptime % 60
+            monday_speak(f'My systems have been active for {uptime} {hour} and {round(frac,1)} minutes')
+
+    if there_exists(['beginning workflow', 'starting work session', 'sitting down for work', 'start work']):
+        begin_work_session()
+
+    if there_exists(['how long have i been working', 'work session length', 'when is my next break', 'work session duration', 'work session status']):
+        work_session_duration()
+
+    # if there_exists(['verbose set to true', 'set verbose to true', 'set verbose preference to true', 'verbose mode 1', 'verbose level 1']):
+    #     global verbose
+    #     verbose = True
+    #     monday_speak('Verbose setting activated')
+
+    # if there_exists(['verbose set to false', 'set verbose to false', 'set verbose preference to false', 'verbose mode 0', 'verbose level 0']):
+    #     verbose = False
+    #     monday_speak('Verbose setting deactivated')
+
+    # Monday program functions & routines #
+    ###############################################
+
+    # if 'begin work summary' or 'open work summart' in voice_data:
+    #     work_summary(action='begin')
+    #     monday_speak('Work summary is open')
+    # if 'close work summary' or 'end work summary' in voice_data:
+    #     work_summary(action='end')
+    #     monday_speak('Work summary is closed')
+
+    if 'directory contents and indexes' in voice_data:
+        for index, item in enumerate(os.listdir()):
+            print(item, ' ', index)
+        monday_speak('Current directory contents and indexes are displayed in my terminal standard out')
+
+    if 'go to' in voice_data and 'directory' in voice_data:
+        if 'the' in voice_data:
+            ''.join(voice_data.split('the'))
+        _dir = voice_data.split('go to')[1].split('directory')[0].strip()
+        if 'your' in _dir:
+            monday_speak(f'Changing current location to my root directory')
+            _chdir(_dir='_Monday')
+        elif 'index' in voice_data:
+            index_src = True
+            _index = voice_data.split('index')[1]
+            if 'for' in _index:
+                _index = 4
+            try:
+                # index = int(_dir.split(' ')[1])
+                _chdir(_dir=int(_index))
+            except Exception as e:
+                print(e)
+                monday_speak(f'I didn\'t hear the directory index')
+        elif 'repository' in _dir:
+            monday_speak(f'Changing current directory to in-scope root')
+            _chdir(root_scope=True)
+        
+        else:
+            _dir.replace(' ', '')
+            monday_speak(f'Changing current directory to {_dir}')
+            _chdir(_dir=_dir)
+
+    # if 'go to repository directory' in voice_data:
+    #     _chdir(root_scope=True)
+
+    if 'go back one level' in voice_data:
+        try:
+            # level = int(voice_data.split('go back')[1])
+            # monday_speak(f'Going back')
+            os.chdir('..')
+            monday_speak(f'Currently in {os.path.split(os.getcwd())[-1]}')
+        except Exception as e:
+            print(e)
+            monday_speak("I didn't hear how many times to back up")
+
+    # if 'go to root in-scope directory' in voice_data:
+    #     monday_speak(f'Changing current directory to in-scope root')
+    #     _chdir(root_scope=True)
+
+    # if 'go back to your directory' in voice_data:
+    #     _dir = voice_data.split('go to')[1].split('directory')[0]
+    #     monday_speak(f'Changing current directory to {_dir}')
+    #     _chdir(_dir='_Monday')
+
+    if there_exists(['open']):
+        if 'code editor' in voice_data:
+            program = 'code editor'
+        else:
+            program = voice_data.split('open')[1]
+        open_program(program)
+
+    if 'list directories' in voice_data:
+        _ls()
+
+    if 'what directory' in voice_data:
+        monday_speak(f'My file system cursor is in the {os.path.split(os.getcwd())[-1]} directory')
+
+    if 'update' in voice_data and 'remote repositories' in voice_data or 'remote repository' in voice_data:
+        monday_speak('Connecting to the remote servers')
+        if 'with all files' in voice_data:
+            update_remote_repository(voice_data, all=True)
+            monday_speak('Updated remote repository with all files')
+        if 'in current' in voice_data:
+            update_remote_repository(voice_data)
+            pwd = os.path.split(os.getcwd())[-1]
+            monday_speak(f'Updated remote repository with all files in {pwd} dirctory')
+        else:
+            update_remote_repository(voice_data)
+            monday_speak('Updated remote repository with my program files')
+
+    if 'push local repository' in voice_data:
+        if 'message' in voice_data:
+            message = voice_data.split('message')[-1]
+            monday_speak('With default main branch?')
+            cm_res = receive_command()
+            if 'yes' in cm_res:
+                monday_speak('Connecting to remote servers')
+                git_push(message=message)
+            elif 'no' in cm_res:
+                cm_res = cm_res.split('no')[-1]
+                branch = cm_res.split('branch')[-1]
+                monday_speak('Connecting to remote servers')
+                git_push(branch, message)
+        
+        elif 'branch' in voice_data:
+            branch = voice_data.split('branch')[-1]
+            monday_speak('What is the message parameter')
+            cm_res = receive_command()
+            if 'generic' in cm_res or 'doesn\'t matter' in cm_res:
+                monday_speak('Got it')
+                monday_speak('Connecting to remote servers')
+                git_push(branch)
+            else:
+                monday_speak('Connecting to remote servers')
+                git_push(branch,cm_res)
+        else:
+            git_push()
+
+    if there_exists(['git status', 'repository status']):
+        os.system('git status')
+        monday_speak("Repository status in my terminal")
+
+    # if 'open code editor' in voice_data:
+    #     if windows:
+    #         os.system('code .')
+    #     monday_speak(f'Opening V S Code ')
+
+    # if 'sync local' and 'repository'in voice_data:
+    #     monday_speak('Pulling my program files from remote servers')
+    #     sync_local_repository(all=False)
+
+    # if 'sync all local repositories' in voice_data:
+    #     monday_speak('Pulling all data from remote servers')
+    #     sync_local_repository(all=True)
+
+    ### ******** EXECUTES WITHOUT THE GIVEN COMMAND ON ITS OWN *******
+    # if 'development environment' or 'begin work session' or 'begin work day' in voice_data:
+    #     initialize_development_environment()
+    
+    if 'new contract entity' in voice_data:
+        monday_speak('Initializing new contract protocol.')
+        try:
+            contract_name = voice_data.split('name')[1]
+            instantiate_new_conctract_entity(contract_name)
+        except IndexError as e:
+            monday_speak('You didn\'t give me a name for the contract.')
+
+    if 'start new repository' in voice_data:
+        monday_speak('Initializing new entity protocol.')
+        try:
+            contract_name = voice_data.split('name')[1]
+            instantiate_new_conctract_entity(contract_name)
+        except IndexError as e:
+            monday_speak('You didn\'t give me a name for the contract.')
+
+    # Monday program functions & program routines #
+    ###############################################
+
+    if 'backup' in voice_data or 'back up' in voice_data and 'your source code' in voice_data:
+        monday_source_code = os.path.join(ROOT_DIR,'monday.py')
+        txt_backup_path = os.path.join(ROOT_DIR,'redundancies/monday_copy.txt')
+        py_backup_path = os.path.join(ROOT_DIR,'redundancies/monday_copy.py')
+        shutil.copyfile(monday_source_code, txt_backup_path)
+        shutil.copyfile(monday_source_code, py_backup_path)
+        monday_speak('My source code backup is now current')
+
+    if 'update dependencies file' in voice_data:
+        update_dependancies_file()
+    if there_exists(['shut down', 'exit', 'power down', 'initiate shutdown']):
+        shutdown()
+    if 'standby mode' in voice_data:
+        duration = voice_data.split('for')[1]
+        monday_speak(f'Entering stand by mode for {duration}')
+        if 'minutes' in duration:
+            _len = int(duration.split('minutes')[0]) * 60
+            time.sleep(_len)
+            monday_speak('My systems are off standby and fully active')
+        if 'seconds' in duration:
+            _len = int(duration.split('seconds')[0])
+            time.sleep(_len)
+    if there_exists(['restart', 'reboot']):
+        reboot()
+
+
+    if there_exists(['remove', 'delete','clear']) and there_exists(['temporary files', 'audio files']):
+        clear_temporary_files()
+        monday_speak('temporary files removed')
+
+    if there_exists(['how many']) and there_exists(['files']):
+        a_f = [x for x in os.listdir() if x.endswith('.mp3')]
+        monday_speak(f'I have {len(a_f)} audio files in my program folder.')
