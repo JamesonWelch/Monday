@@ -155,16 +155,15 @@ def monday_speak(audio_string):
     os.remove(audio_file)
 
 def response_polarity(voice_data):
-    response = subprocess.Popen('ls', stdout=subprocess.PIPE).communicate()[0].decode('utf-8')
     if there_exists(speech_config.deny):
         return False
     if there_exists(speech_config.affirm):
         return True
 
-def _stdout(cmd: list, module='os') -> str:
+def exec_stdout(cmd: list, module='os') -> str:
     if module == 'os':
         os.system(cmd)
-    elif moduel == 'subprocess':
+    elif module == 'subprocess':
         _out = subprocess.Popen(cmd,stdout=subprocess.PIPE).communicate()[0]
         _out = _out.decode('utf-8')
         print(_out)
