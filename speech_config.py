@@ -8,3 +8,4 @@ affirm = ['yes', 'yep', 'definitely','absolutely',
 deny = ['no', 'nope', 'definitely not','absolutely not',
         'don\'t do that', 'of course not', 'do not do that',
         'sounds terribe', 'sounds bad', 'bad idea']
+

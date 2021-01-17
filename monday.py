@@ -159,10 +159,10 @@ def monday_speak(audio_string):
         print(audio_string)
 
 def response_polarity(voice_data):
-    if there_exists(speech_config.deny):
-        return False
-    if there_exists(speech_config.affirm):
-        return True
+    if voice_data in speech_config.deny:
+        return '-'
+    if  voice_data in speech_config.affirm:
+        return '+'
 
 def exec_stdout(cmd, module='os') -> str:
     """ Execute command with stdout capture option """
@@ -609,6 +609,25 @@ def clear_reminders():
 def dictate_wikipedia(article):
     pass
 
+def log_activity(activity):
+    activity_path = 'activity_log.json'
+    today = str(datetime.date.today())
+
+    if activity_path not in os.listdir():
+        with open(activity_path, 'w') as outfile:
+            data = []
+            outfile.write(json.dumps(data))
+
+    with open(activity_path, 'r') as f:
+        data = json.loads(f.read())
+    if today in data:
+        data[today].append(activity)
+    else:
+        data.append({today : [activity]})
+
+    with open(activity_path, 'w') as outfile:
+        outfile.write(json.dumps(data))
+
 def current_weather():
     APIKEY = '1db843324b9dc2c6437638d6be0aefc6'
     r = requests.get(f'http://api.openweathermap.org/data/2.5/weather?q=Santa%20Monica&appid={APIKEY}&units=imperial')
@@ -619,16 +638,19 @@ def current_weather():
     if wind > 10:
         monday_speak(f'and a bit windy at {wind} miles per hour')
 
-def morning_routines(task_rem=False):
+def time_of_day():
     today = datetime.date.today()
     hour = datetime.datetime.now().hour
     if hour >= 0 and hour <= 11:
-        greeting = 'good morning'
+        return 'morning'
     if hour >= 12 and hour <= 17:
-        greeting = 'good afternoon'
+        return 'afternoon'
     elif hour >= 18 and hour <= 23:
-        greeting = 'good evening'
-    monday_speak(f'{greeting}')
+        return 'evening'
+
+def morning_routines(task_rem=False):
+    today = datetime.date.today()
+    monday_speak(f'good {time_of_day()}')
     monday_speak(f'Today is {today.strftime("%B %d, %Y")}')
     if task_rem == True:
         monday_speak('Please don\'t forget to keep my source code open for constant updates. ')
@@ -829,11 +851,32 @@ while monday_active:
             frac = uptime % 60
             monday_speak(f'My systems have been active for {uptime} {hour} and {round(frac,1)} minutes')
 
+    if there_exists(['i\'m going out', 'i\'m leaving', 'i\'m heading out', 'i\'m going']):
+        monday_speak('do i need to shut down or go into stasis?')
+        cm_res = receive_command()
+        if response_polarity(cm_res) == '-':
+            responses = ['have a great time sir', f'enjoy your {time_of_day()} sir',]
+            response = responses[random.randint(0, len(responses)-1)]
+            monday_speak(response)
+        else:
+            if 'shut down' in cm_res:
+                shutdown()
+            elif 'stasis' in cm_res:
+                duration = cm_res.split('for')[-1].split('minutes')[0]
+                monday_speak(f'entering stasis for {duration} minutes')
+                time.sleep(int(duration)*60)
+
     if there_exists(['beginning workflow', 'starting work session', 'sitting down for work', 'start work']):
         begin_work_session()
 
     if there_exists(['how long have i been working', 'work session length', 'when is my next break', 'work session duration', 'work session status']):
         work_session_duration()
+
+    if there_exists(['log activity']):
+        activity = voice_data.split('log activity')[-1].split()[0]
+        log_activity(activity)
+        monday_speak(f'{activity} activity logged')
+        
 
     # if there_exists(['verbose set to true', 'set verbose to true', 'set verbose preference to true', 'verbose mode 1', 'verbose level 1']):
     #     global verbose
