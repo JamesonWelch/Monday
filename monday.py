@@ -369,6 +369,18 @@ def initialize_development_environment():
 def send_file_to_home_server():
     pass
 
+def metadata_query():
+    dir_contents = os.listdir()
+    for item in dir_contents:
+        filename, file_ext = os.path.splitext(item)
+        if file_ext == '.json':
+            if filename == 'dataset':
+                with open(item, 'r') as f:
+                    data = json.loads(f.read())
+                _len = len(data)
+                filesize = os.stat(item).st_size
+                return (_len, filesize)
+
 def source_code_research(module):
     research_fpath = os.listdir(os.path.join(ROOT_DIR))
     if 'source_code_research.json' not in research_fpath:
@@ -896,6 +908,14 @@ while monday_active:
     # if 'close work summary' or 'end work summary' in voice_data:
     #     work_summary(action='end')
     #     monday_speak('Work summary is closed')
+
+    if there_exists(['how much data', 'how many data points', 'data status']):
+        _len  = metadata_query()[0]
+        filesize = metadata_query()[1]
+        monday_speak(f'I have collected {_len} data points at a size of {filesize} bytes')
+
+    if there_exists(['start program timer']):
+        pass
 
     if 'directory contents and indexes' in voice_data:
         for index, item in enumerate(os.listdir()):
