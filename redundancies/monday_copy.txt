@@ -123,6 +123,7 @@ def receive_command(ask=False):
             cron()
             reminded = True
         print(f'Status: Active | Current Time: {time.strftime("%H:%M")} {today.strftime("%B %d, %Y")}')
+        print(f'Cursor: {os.path.split(os.getcwd())[-1]}, Uptime: {round((time.time()-prog_start)/60)} minutes')
 
         if ask:
             print(ask)
@@ -163,6 +164,9 @@ def response_polarity(voice_data):
         return '-'
     if  voice_data in speech_config.affirm:
         return '+'
+
+def random_response(response_list: list) -> str:
+    return response_list[random.randint(0, len(response_list)-1)]
 
 def exec_stdout(cmd, module='os') -> str:
     """ Execute command with stdout capture option """
@@ -370,16 +374,53 @@ def send_file_to_home_server():
     pass
 
 def metadata_query():
-    dir_contents = os.listdir()
-    for item in dir_contents:
-        filename, file_ext = os.path.splitext(item)
-        if file_ext == '.json':
-            if filename == 'dataset':
-                with open(item, 'r') as f:
-                    data = json.loads(f.read())
-                _len = len(data)
-                filesize = os.stat(item).st_size
-                return (_len, filesize)
+    if 'metadata.json' not in os.listdir():
+        monday_speak("a metadata file does not exist. creating one now.")
+        monday_speak("Will the dataset have nested dictionaries?")
+        cm_res = receive_command()
+        if 'no' in cm_res:
+            create_project_metadata()
+        elif 'key' in voice_data:
+            key_values = voice_data.split('key')[-1]
+            key = key_values.split('type')[0]
+            key_type = key_values.split('type')[1]
+            create_project_metadata(key,key_type)
+    
+    with open('metadata.json', 'r') as f:
+        data = json.loads(f.read())
+    path = data['collected']['path']
+    key =  data['collected']['key']
+    key_type =  data['collected']['key_type']
+
+    with open(path, 'r') as f:
+        dataset = json.loads(f.read())
+
+    if key:
+        if isinstance(key, list):
+            _len = len(dataset[key])
+            filesize = os.stat(dataset[key]).st_size
+    return (_len, filesize)
+
+def create_project_metadata(key=None, key_type=None):
+    """ Crates metadata file for Monday analysis """
+    
+    if key:
+        if len(key.split()) >1:
+            '_'.join(key)
+    if key_type:
+        if len(key_type.split()) >1:
+            '_'.join(key_type)
+
+    _metadata = {
+        "collected": {
+            "path":"dataset.json",
+            "key":key,
+            "key_type":key_type
+        }
+    }
+
+    with open('metadata.json', 'w') as metafile:
+        metafile.write(json.dumps(_metadata))
 
 def source_code_research(module):
     research_fpath = os.listdir(os.path.join(ROOT_DIR))
@@ -664,8 +705,8 @@ def morning_routines(task_rem=False):
     today = datetime.date.today()
     monday_speak(f'good {time_of_day()}')
     monday_speak(f'Today is {today.strftime("%B %d, %Y")}')
-    if task_rem == True:
-        monday_speak('Please don\'t forget to keep my source code open for constant updates. ')
+    # if task_rem == True:
+    #     monday_speak('Please don\'t forget to keep my source code open for constant updates. ')
 
 # Monday program routines #
 ###########################
@@ -909,7 +950,26 @@ while monday_active:
     #     work_summary(action='end')
     #     monday_speak('Work summary is closed')
 
+    if there_exists(['metadata file']):
+        if 'key' in voice_data:
+            monday_speak("Assembling necessary metadata")
+            key_values = voice_data.split('key')[-1]
+            key = key_values.split('type')[0]
+            key = key_values.split('type')[1]
+        else:
+            monday_speak("Will the dataset have nested dictionaries?")
+            cm_res = receive_command()
+            if 'no' in cm_res:
+                create_project_metadata()
+            elif 'key' in voice_data:
+                key_values = voice_data.split('key')[-1]
+                key = key_values.split('type')[0]
+                key_type = key_values.split('type')[1]
+                create_project_metadata(key,key_type)
+        monday_speak(random_response(speech_config.finished))
+    
     if there_exists(['how much data', 'how many data points', 'data status']):
+        monday_speak("analyzing data")
         _len  = metadata_query()[0]
         filesize = metadata_query()[1]
         monday_speak(f'I have collected {_len} data points at a size of {filesize} bytes')
