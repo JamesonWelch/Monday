@@ -783,7 +783,7 @@ while monday_active:
     # greetings, introductions, and pleasantries #
     ##############################################
 
-    if there_exists(["what is the weather","what is the temperature","how cold is it","how hot is it"]):
+    if there_exists(["what is the weather","what is the temperature","what's the weather","what's the temperature","how cold is it","how hot is it"]):
         current_weather()
     
     if there_exists(["what can you do","what's your functionality","your systems", "your functions", "what you do"]):
