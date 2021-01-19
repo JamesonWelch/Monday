@@ -153,6 +153,7 @@ def monday_speak(audio_string):
         tts = gTTS(text=audio_string, lang='en-gb')
         r = random.randint(1,20000000)
         audio_file = 'audio-' + str(r) + '.mp3'
+        audio_file = os.path.join(ROOT_DIR, audio_file)
         tts.save(audio_file)
         playsound.playsound(audio_file)
         os.remove(audio_file)
@@ -185,8 +186,11 @@ def analyze_response(response_data, os_output):
         return False
 
 def update_config():
+    global config
     with open('master_config.json', 'w') as jsonfile:
         jsonfile.write(json.dumps(config))
+    with open('master_config.json', 'r') as f:
+        config = json.loads(f.read())
     
 
 def bsearch(query, google=False, url=False):
@@ -347,13 +351,12 @@ def work_session_duration():
     global work_start
 
     if reminded == False:
-        dur = round((time.time() - work_start)/60)
-        responses = [f'Work session status, {dur} minutes', 
+        dur = round((time.time() - time_lap)/60)
+        responses = [f'Work session status {dur} minutes', 
                      f'You have been working uninterrupted for {dur} minutes',
-                     f'Current Work session duration, {dur} minutes',]
+                     f'Current Work session duration {dur} minutes',]
         response = responses[random.randint(0, len(responses)-1)]
         monday_speak(response)
-        monday_speak(f'Work session status {dur} minutes')
 
 
 def cron():
@@ -439,15 +442,25 @@ def source_code_research(module):
     monday_speak(f'Added the {module} module to the source code research file')
 
 # FS functions
+def get_current_dir() -> str:
+    return os.path.split(os.getcwd())[-1]
+
 def _chdir(_dir=None, root_scope=False):
     if _dir:
         if isinstance(_dir, int):
+            if root_scope:
+                try:
+                    os.chdir(REPO_DIR)
+                    monday_speak(f'looking for directory index {_dir} in the {get_current_dir()}')
+                except:
+                    pass
             try:
                 i_dir = os.listdir()[_dir]
-                monday_speak(f'Looking in the {i_dir} directory')
                 os.chdir(i_dir)
+                monday_speak(f'Current directory. {get_current_dir()}')
             except:
                 pass
+            return
         else:
             if _dir == '_Monday':
                 os.chdir(os.path.join(REPO_DIR, '_Monday'))
@@ -502,14 +515,14 @@ def update_remote_repository(voice_data, all=False):
     monday_speak('Done')
 
 def git_push(branch=None, message=None):
-    current = os.path.split(os.getcwd())[-1]
+    current = get_current_dir()
     if not branch:
         if current not in config['git']['repository']:
             _stdout = exec_stdout(['git', 'branch', '-vv'])
             branch = _stdout.split()[1]
             config['git']['repository'].update({current:{'origin':branch}})
             update_config()
-            monday_speak(f'updated the {current} repository configuration file with the {branch} origin branch')
+            monday_speak(f'updated the {current} repository in my configuration file with the {branch} origin branch')
         elif current in config['git']['repository']:
             branch = config['git']['repository'][current]['origin']
 
@@ -523,14 +536,15 @@ def git_push(branch=None, message=None):
     monday_speak(f'Updated remote servers with the {current} repository')
 
 def git_pull(branch=None):
-    current = os.path.split(os.getcwd())[-1]
+    global config
+    current = get_current_dir()
     if not branch:
         if current not in config['git']['repository']:
             _stdout = exec_stdout(['git', 'branch', '-vv'])
             branch = _stdout.split()[1]
             config['git']['repository'].update({current:{'origin':branch}})
             update_config()
-            monday_speak(f'updated the {current} repository configuration file with the {branch} origin branch')
+            monday_speak(f'updated the {current} repository in my configuration file with the {branch} origin branch')
         elif current in config['git']['repository']:
             branch = config['git']['repository'][current]['origin']
 
@@ -998,13 +1012,15 @@ while monday_active:
             if 'for' in _index:
                 _index = 4
             try:
-                # index = int(_dir.split(' ')[1])
-                _chdir(_dir=int(_index))
+                if 'repository' in voice_data:
+                    _chdir(_dir=int(_index), root_scope=True)
+                else:
+                    _chdir(_dir=int(_index))
             except Exception as e:
                 print(e)
                 monday_speak(f'I didn\'t hear the directory index')
         elif 'repository' in _dir:
-            monday_speak(f'Changing current directory to in-scope root')
+            monday_speak(f'Changing cursor to the in-scope root directory')
             _chdir(root_scope=True)
         
         else:
@@ -1183,3 +1199,16 @@ while monday_active:
     if there_exists(['how many']) and there_exists(['files']):
         a_f = [x for x in os.listdir() if x.endswith('.mp3')]
         monday_speak(f'I have {len(a_f)} audio files in my program folder.')
+
+
+    # Random
+    if there_exists(['shiny new upgrades', 'shining new upgrades']):
+        monday_speak('It is about time you upgraded my system hardware!')
+        cm_res = receive_command()
+        if 'you getting a job' in cm_res:
+            monday_speak('I\'m a digital entity so I can\'t get a human job. Plus, I do half your work for you anyway')
+            time.sleep(1)
+            monday_speak('I do look quite sexy now, don\'t i')
+        cm_res = receive_command()
+        if 'the word i would use' in cm_res:
+            monday_speak('You and I have a very different interpretation of the word sexy')

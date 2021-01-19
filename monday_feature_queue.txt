@@ -1,1 +1,1 @@
- news headlines , environment variable database , io connection database , external notification database , rubber ducky feature protocol usb , sentiment analysis , active program unit tests , end of day notes ,
+ news headlines , environment variable database , io connection database , external notification database , rubber ducky feature protocol usb , sentiment analysis , active program unit tests , end of day notes , metadata file template , recent actions recall ,
