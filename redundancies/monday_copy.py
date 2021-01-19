@@ -395,10 +395,10 @@ def metadata_query():
     with open(path, 'r') as f:
         dataset = json.loads(f.read())
 
-    if key:
-        if isinstance(key, list):
-            _len = len(dataset[key])
-            filesize = os.stat(dataset[key]).st_size
+    if key == 'None':
+        # if isinstance(key, list):
+        _len = len(dataset)
+    filesize = os.stat(path).st_size
     return (_len, filesize)
 
 def create_project_metadata(key=None, key_type=None):
@@ -904,6 +904,9 @@ while monday_active:
             frac = uptime % 60
             monday_speak(f'My systems have been active for {uptime} {hour} and {round(frac,1)} minutes')
 
+    if there_exists(['hey siri', 'hey google']):
+        time.sleep(5)
+    
     if there_exists(['i\'m going out', 'i\'m leaving', 'i\'m heading out', 'i\'m going']):
         monday_speak('do i need to shut down or go into stasis?')
         cm_res = receive_command()
