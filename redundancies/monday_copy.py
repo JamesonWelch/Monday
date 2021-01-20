@@ -1109,6 +1109,7 @@ while monday_active:
                 monday_speak('Connecting to remote servers')
                 git_push(branch,cm_res)
         else:
+            monday_speak('Initiating...')
             git_push()
 
     if there_exists(['pull remote repository']):
@@ -1207,7 +1208,7 @@ while monday_active:
         cm_res = receive_command()
         if 'you getting a job' in cm_res:
             monday_speak('I\'m a digital entity so I can\'t get a human job. Plus, I do half your work for you anyway')
-            time.sleep(1)
+            time.sleep(0.7)
             monday_speak('I do look quite sexy now, don\'t i')
         cm_res = receive_command()
         if 'the word i would use' in cm_res:
