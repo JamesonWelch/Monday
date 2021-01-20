@@ -138,7 +138,7 @@ def receive_command(ask=False):
         except sr.UnknownValueError:
             pass
         except sr.RequestError:
-            monday_speak('I am unable to connect to my speech recognition servers')
+            monday_speak('I am unable to connect to my speech recognition server')
         except sr.WaitTimeoutError:
             monday_speak('I\'m not hearing anything.')
         print('>>', voice_data.lower())
@@ -192,6 +192,15 @@ def update_config():
     with open('master_config.json', 'r') as f:
         config = json.loads(f.read())
     
+# Hardware
+def screen_off():
+    if windows:
+        os.system('nircmd monitor off')
+    # os.system('scrnsave.scr /s')
+
+def screen_on():
+    pass
+
 
 def bsearch(query, google=False, url=False):
     if windows:
@@ -835,6 +844,10 @@ while monday_active:
         monday_speak('Getting Monday features queue')
         read_monday_feature_queue()
 
+    # Hardware
+    if there_exists(['screen off', 'screens off', 'shut off screens', 'turn off screens']):
+        screen_off()
+
     # greetings, introductions, and pleasantries #
     ##############################################
 
@@ -1125,11 +1138,24 @@ while monday_active:
         # os.system(f'git pull origin {branch}')
 
     if there_exists(['git status', 'repository status']):
-        if 'working tree clean' in exec_stdout(['git', 'status']):
+        git_status = exec_stdout(['git', 'status'])
+        if 'working tree clean' in git_status:
             monday_speak('branch up to date')
+        elif 'Changes not staged for commit' in git_status:
+            git_status = git_status.split('\n')
+            msg = git_status[1]
+            msg = msg.replace('/', ' ').replace('\'', '') + 'branch'
             
-        os.system('git status')
-        monday_speak("Repository status in my terminal")
+            monday_speak(msg)
+            modified = 0
+            for _s in git_status:
+                if 'modified' in _s:
+                    modified += 1
+            if modified > 0:
+                monday_speak(f'{modified} files have changes not staged for a commit')
+            
+            os.system('git status')
+            monday_speak("Specific details in my terminal")
 
     # if 'open code editor' in voice_data:
     #     if windows:
