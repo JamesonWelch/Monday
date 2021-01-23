@@ -1308,7 +1308,7 @@ while monday_active:
     #     initialize_development_environment()
 
     # Unit tests
-    if there_exists(['test current', 'perform unit test', 'perform unit tests', 'initialize unit test', 'begin unit test', 'begin unit tests', 'run unit tests', 'run tests','start unit tests', 'run test suite']):
+    if there_exists(['test current', 'perform unit test', 'perform unit tests', 'initialize unit test', 'begin unit test', 'begin unit tests', 'run unit tests', 'run tests','start unit tests', 'run test suite','run diagnostics', 'execute test routines', 'perform test routines']):
         cwd = get_current_dir()
         if 'repository' in cwd:
             monday_speak('On which repository do you want me to run the testing program?')
