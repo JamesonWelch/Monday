@@ -63,10 +63,6 @@ with open(os.path.join(REPO_DIR, 'system_sync/git_sync_list.txt'), 'r') as repos
     for repo in repos:
         repositories.append(repo.strip('\n\t'))
 
-def there_exists(terms):
-    for term in terms:
-        if term in voice_data:
-            return True
 
 
 def timeout(seconds, action=None):
@@ -143,6 +139,17 @@ def receive_command(ask=False):
             monday_speak('I\'m not hearing anything.')
         print('>>', voice_data.lower())
         return voice_data.lower()
+
+
+def there_exists(terms, override=None):
+    if not override:
+        for term in terms:
+            if term in voice_data:
+                return True
+    elif override:
+        for term in terms:
+            if term in override:
+                return True
 
 def monday_speak(audio_string):
     global mute
@@ -966,6 +973,16 @@ while monday_active:
     # Hardware
     if there_exists(['screen off', 'screens off', 'shut off screens', 'turn off screens']):
         screen_off()
+
+    if voice_data == 'full system shutdown':
+        monday_speak('Initiating full system shutdown procedures')
+        cm_res = receive_command()
+        if there_exists(['stop','no','cancel','abort'],override=cm_res):
+            monday_speak('Shutdown procedure cancelled')
+        else:
+            monday_speak('Shutdown in 5 seconds')
+            time.sleep(5)
+            os.system('shutdown /s')
 
     # greetings, introductions, and pleasantries #
     ##############################################
