@@ -1,1 +1,1 @@
- run ksm scrape,  respond to justin,  write ksm estimate,  spawn new process for each Monday function using wrapper function,
+write ksm estimate,  spawn new process for each Monday function using wrapper function,

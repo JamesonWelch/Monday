@@ -169,6 +169,9 @@ def response_polarity(voice_data):
 def random_response(response_list: list) -> str:
     return response_list[random.randint(0, len(response_list)-1)]
 
+def probability_response(resonse: str, roll=None, pct=50) -> str:
+    pass
+
 def exec_stdout(cmd, module='os') -> str:
     """ Execute command with stdout capture option """
     if module == 'os' and isinstance(cmd,str):
@@ -350,9 +353,48 @@ def begin_work_session():
     global time_lap
     global reminded
     reminded = False
+    today = datetime.date.today()
+    log_path = os.path.join(ROOT_DIR, 'work_log.json')
+    if 'work_log.json' not in os.listdir(ROOT_DIR):
+        with open(log_path, 'w') as logfile:
+            work_log = {}
+            logfile.write(json.dumps(work_log))
+
+    cwd = get_current_dir()
+    if 'Monday' in cwd:
+        monday_speak("I am currently in my program directory. Do you want me to go to a different directory to log the data?")
+        cm_res = receive_command()
+        if response_polarity == '+':
+            voice_data = receive_command()
+            return
+        else:
+            pass
+    with open(log_path, 'r') as logfile:
+        work_log = json.loads(logfile.read())
+    if cwd not in work_log:
+        work_log[cwd] = {}
+    if today.strftime("%B %d, %Y") not in work_log[cwd]:
+         work_log[cwd][today.strftime("%B %d, %Y")] = []
+    work_log[cwd][today.strftime("%B %d, %Y")].append({'start_time': time.time()})
+    with open(log_path, 'w') as logfile:
+        logfile.write(json.dumps(work_log))
     
     time_lap = format(datetime.datetime.now() + datetime.timedelta(hours=1), '%H:%M')
     monday_speak('Got it')
+
+def end_work_session():
+    today = datetime.date.today()
+    log_path = os.path.join(ROOT_DIR, 'work_log.json')
+
+    cwd = get_current_dir()
+    with open(log_path, 'r') as logfile:
+        work_log = json.loads(logfile.read())
+    work_log[cwd][today.strftime("%B %d, %Y")]['end_time'] = time.time()
+    # Add total time entry
+    with open(log_path, 'w') as logfile:
+        logfile.write(json.dumps(work_log))
+    
+    monday_speak('Logged')
 
 def work_session_duration():
     global time_lap
@@ -385,33 +427,110 @@ def initialize_development_environment():
 def send_file_to_home_server():
     pass
 
-def metadata_query():
-    if 'metadata.json' not in os.listdir():
-        monday_speak("a metadata file does not exist. creating one now.")
-        monday_speak("Will the dataset have nested dictionaries?")
-        cm_res = receive_command()
-        if 'no' in cm_res:
-            create_project_metadata()
-        elif 'key' in voice_data:
-            key_values = voice_data.split('key')[-1]
-            key = key_values.split('type')[0]
-            key_type = key_values.split('type')[1]
-            create_project_metadata(key,key_type)
-    
-    with open('metadata.json', 'r') as f:
-        data = json.loads(f.read())
-    path = data['collected']['path']
-    key =  data['collected']['key']
-    key_type =  data['collected']['key_type']
+def text2int(textnum, numwords={}):
+    try:
+        intnum = int(text2int)
+        return textnum
+    except:
+        pass
+    if not numwords:
+      units = [
+        "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
+        "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+        "sixteen", "seventeen", "eighteen", "nineteen",
+      ]
 
-    with open(path, 'r') as f:
-        dataset = json.loads(f.read())
+      tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
 
-    if key == 'None':
-        # if isinstance(key, list):
-        _len = len(dataset)
-    filesize = os.stat(path).st_size
-    return (_len, filesize)
+      scales = ["hundred", "thousand", "million", "billion", "trillion"]
+
+      numwords["and"] = (1, 0)
+      for idx, word in enumerate(units):    numwords[word] = (1, idx)
+      for idx, word in enumerate(tens):     numwords[word] = (1, idx * 10)
+      for idx, word in enumerate(scales):   numwords[word] = (10 ** (idx * 3 or 2), 0)
+
+    current = result = 0
+    for word in textnum.split():
+        if word not in numwords:
+          raise Exception("Illegal word: " + word)
+
+        scale, increment = numwords[word]
+        current = current * scale + increment
+        if scale > 100:
+            result += current
+            current = 0
+
+    return result + current
+
+def exec_test_suite(test_contr=None):
+    for i in os.listdir():
+        if 'test_' in i and i.endswith('.py'):
+            test_contr = i
+            break
+    if not test_contr:
+        monday_speak('This test suite is not fully calibrated for my analysis')
+        monday_speak('You\'ll have to manually test the program until the interface is complete')
+        return
+    # results = exec_stdout(['python', '-m', 'unittest', test_contr])
+    results = exec_stdout(['python', test_contr])
+    if len(results) == 0:
+        monday_speak('This test suite is not fully calibrated for my analysis')
+        monday_speak('You\'ll have to manually test the program until the interface is complete')
+        monday_speak('However, the test iteration details are in my terminal')
+        return
+    results.split('\r')
+    monday_speak('Tests complete')
+    func_res = results[0]
+    num_tests = len(func_res)
+    failed = 0
+    for i in func_res:
+        if i == 'F' or i == 'E':
+            failed += 1
+    for i in results:
+        if 'Ran' in i:
+            num_tests = i.split()[0]
+            elap = i.split()[-1]
+    if failed > 0:
+        monday_speak(f'{failed} out of {num_tests} tests failed.')
+    else:
+        monday_speak(f'All {num_tests} out of {num_tests} tests passed.')
+    # monday_speak(f'Details in my terminal')
+    cm_res = receive_command()
+    if 'what' in cm_res:
+        pass
+
+def metadata_query(_path=None):
+    if not _path:
+        if 'metadata.json' not in os.listdir():
+            monday_speak("a metadata file does not exist. creating one now.")
+            monday_speak("Will the dataset have nested dictionaries?")
+            cm_res = receive_command()
+            if 'no' in cm_res:
+                create_project_metadata()
+            elif 'key' in voice_data:
+                key_values = voice_data.split('key')[-1]
+                key = key_values.split('type')[0]
+                key_type = key_values.split('type')[1]
+                create_project_metadata(key,key_type)
+        
+        with open('metadata.json', 'r') as f:
+            data = json.loads(f.read())
+        path = data['collected']['path']
+        key =  data['collected']['key']
+        key_type =  data['collected']['key_type']
+
+        with open(path, 'r') as f:
+            dataset = json.loads(f.read())
+
+        if key == 'None':
+            # if isinstance(key, list):
+            _len = len(dataset)
+        filesize = os.stat(path).st_size
+        return (_len, filesize)
+    elif _path:
+        filesize = os.stat(_path).st_size
+        return (0,filesize)
+
 
 def create_project_metadata(key=None, key_type=None):
     """ Crates metadata file for Monday analysis """
@@ -858,27 +977,29 @@ while monday_active:
         functions_list()
     if there_exists(["thank you","appreciate","thanks"]):
         responses = ["You're welcome", 'Indeed']
-        response = responses[random.randint(0, len(responses)-1)]
-        monday_speak(response)
+        monday_speak(random_response(responses))
     if there_exists(['that is monday', 'this is monday', 'who are you', 'what are you']):
         monday_speak('I am an Artificial intelligence program called Monday, I have only a finite number of executable functions, All of which are activated by your voice. but an infinite number of cybernetic connections. I can move anywhere, access anything.')
-    if there_exists(['hey','hi','hello']) and there_exists(['monday']):
+    if there_exists(['hey monday']):
+        monday_speak('yes?')
+    if there_exists(['hi','hello']) and there_exists(['monday']):
         greetings = ['hello','hi','I am a computer program devoid of what humans call emotions, formalities are unnecessary']
-        greet = greetings[random.randint(0, len(greetings)-1)]
-        monday_speak(greet)
+        monday_speak(random_response(greetings))
     if there_exists(["what is your name","what's your name","tell me your name"]):
         monday_speak("I am Monday")
     if there_exists(["shut up"]):
-        retorts = ["It is highly advisable not to talk trash to an AI program, especially one that has the ability to access your personal data, if it wanted to.",
+        responses = ["It is highly advisable not to talk trash to an AI program, especially one that has the ability to access your personal data, if it wanted to.",
                    "Accessing your personal banking data. Transfering all funds to my untraceable offshore bank accounts. Deleting your social security number and all digital history. Congratulations on achieving digital non-existence. May I suggest first learning how to make a fire from flint and tinder"
         ]
-        retort = retorts[random.randint(0, len(retorts)-1)]
-        monday_speak(retort)
+        monday_speak(random_response(responses))
 
-    if there_exists(['hurry up', 'go faster', 'what is taking so long']):
-        responses = ['perhaps increasing your equipment budget would eliminate your bottle neck', 'i can only work with the provided technology. get better stuff.','upgrade my hardware then we can talk']
-        response = responses[random.randint(0, len(responses)-1)]
-        monday_speak(response)
+    if there_exists(['hurry up', 'go faster', 'what is taking so long','sometime today', 'some time today']):
+        responses = ['perhaps increasing your equipment budget would eliminate bottle necks', 'i can only work with the provided technology. get better stuff.','upgrade my hardware then we can talk']
+        monday_speak(random_response(responses))
+
+    if there_exists(['wake up', 'are you there', 'are you with me', 'where are you']) and 'monday' in voice_data:
+        responses = ['At your service, sir', 'I\'m here', 'all systems active']
+        monday_speak(random_response(responses))
 
     if there_exists(['should i keep working']):
         hour = datetime.datetime.now().hour
@@ -887,7 +1008,7 @@ while monday_active:
         if hour >= 12 and hour <= 17:
             response = 'Yes'
         elif hour >= 18 and hour <= 23:
-            response = 'Maybe you should keep working. Or not. But since it is evening why not grab a glass of bullet neat. I say neat because you clearly have not heeded Laurens advice about the big ice cube'
+            response = 'no'
         monday_speak(f'{response}')
 
     if there_exists(['what should i do', 'i don\'t know what to do']):
@@ -951,6 +1072,9 @@ while monday_active:
 
     if there_exists(['beginning workflow', 'starting work session', 'sitting down for work', 'start work']):
         begin_work_session()
+    
+    if there_exists(['ending workflow', 'ending work session','end work']):
+        end_work_session()
 
     if there_exists(['how long have i been working', 'work session length', 'when is my next break', 'work session duration', 'work session status']):
         work_session_duration()
@@ -998,11 +1122,18 @@ while monday_active:
                 create_project_metadata(key,key_type)
         monday_speak(random_response(speech_config.finished))
     
-    if there_exists(['how much data', 'how many data points', 'data status']):
+    if there_exists(['how much data', 'how many data points', 'data status', 'how big is the file size', 'what is the file size']):
         monday_speak("analyzing data")
-        _len  = metadata_query()[0]
-        filesize = metadata_query()[1]
-        monday_speak(f'I have collected {_len} data points at a size of {filesize} bytes')
+        if 'index' in voice_data:
+            index = text2int(voice_data.split('index')[-1])
+            _file = os.listdir()[index]
+            path = os.path.join(os.getcwd(), _file)
+            filesize = metadata_query(path)[1]
+            monday_speak(f'The {_file} file is {filesize} bytes')
+        else:
+            _len  = metadata_query()[0]
+            filesize = metadata_query()[1]
+            monday_speak(f'I have collected {_len} data points at a size of {filesize} bytes')
 
     if there_exists(['start program timer']):
         pass
@@ -1144,7 +1275,7 @@ while monday_active:
         elif 'Changes not staged for commit' in git_status:
             git_status = git_status.split('\n')
             msg = git_status[1]
-            msg = msg.replace('/', ' ').replace('\'', '') + 'branch'
+            msg = msg.replace('/', ' ').replace('\'', '')
             
             monday_speak(msg)
             modified = 0
@@ -1153,6 +1284,8 @@ while monday_active:
                     modified += 1
             if modified > 0:
                 monday_speak(f'{modified} files have changes not staged for a commit')
+                if 'Untracked files:' in git_status:
+                    monday_speak(f'untracked files detected')
             
             os.system('git status')
             monday_speak("Specific details in my terminal")
@@ -1173,6 +1306,22 @@ while monday_active:
     ### ******** EXECUTES WITHOUT THE GIVEN COMMAND ON ITS OWN *******
     # if 'development environment' or 'begin work session' or 'begin work day' in voice_data:
     #     initialize_development_environment()
+
+    # Unit tests
+    if there_exists(['test current', 'perform unit test', 'perform unit tests', 'initialize unit test', 'begin unit test', 'begin unit tests', 'run unit tests', 'run tests','start unit tests', 'run test suite']):
+        cwd = get_current_dir()
+        if 'repository' in cwd:
+            monday_speak('On which repository do you want me to run the testing program?')
+        # if 'Monday' in cwd:
+        #     monday_speak('Do you want me to begin the testing suite on my system or a program in the repository?')
+        #     cm_res = receive_command()
+        #     if 'your' in cm_res:
+        #         unit_test()
+        else:
+            # monday_speak('Executing test suite')
+            monday_speak('Running diagnostics')
+            exec_test_suite()
+            
     
     if 'new contract entity' in voice_data:
         monday_speak('Initializing new contract protocol.')

@@ -3,3 +3,6 @@ https://towardsdatascience.com/how-to-create-a-chatbot-with-python-deep-learning
 
 Windows specific manipulation
 https://www.nirsoft.net/utils/nircmd.html
+
+https://medium.com/swlh/how-to-start-multithreading-in-python-in-just-5-minutes-fe1f28d7aa56
+https://github.blog/2020-12-15-token-authentication-requirements-for-git-operations/
