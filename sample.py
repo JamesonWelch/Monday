@@ -1,4 +1,6 @@
 def text2int(textnum, numwords={}):
+    try:
+        int(text2int)
     if not numwords:
       units = [
         "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",

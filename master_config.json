@@ -1,8 +1,1 @@
-{"git": {
-    "repository": {
-        "_Monday": {
-            "origin": "master"
-        }
-    }
-}
-}
+{"git": {"repository": {"_Monday": {"origin": "master"}}}, "current_segment": " function migration to separate thread"}

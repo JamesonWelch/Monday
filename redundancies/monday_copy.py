@@ -23,6 +23,7 @@ import json
 # from apple_calendar_integration import ICloudCalendarAPI
 
 
+assert 'master_config.json' in os.listdir()
 with open('master_config.json', 'r') as f:
     config = json.loads(f.read())
 
@@ -103,12 +104,15 @@ def timeout(seconds, action=None):
 r = sr.Recognizer()
 
 # Globals
+# *** Need to log global's changes
 rems = 0
 time_lap = None
 reminded = False
 work_start = time.time()
 verbose = False
 mute = False
+_last_speech = None
+current_segment = None
 
 def receive_command(ask=False):
     with sr.Microphone() as source:
@@ -141,7 +145,7 @@ def receive_command(ask=False):
         return voice_data.lower()
 
 
-def there_exists(terms, override=None):
+def _exists(terms, override=None):
     if not override:
         for term in terms:
             if term in voice_data:
@@ -152,7 +156,9 @@ def there_exists(terms, override=None):
                 return True
 
 def monday_speak(audio_string):
+    global _last_speech
     global mute
+    _last_speech = audio_string
     if verbose:
         print(audio_string)
     if not mute:
@@ -167,10 +173,27 @@ def monday_speak(audio_string):
     elif mute:
         print(audio_string)
 
+def repeat_last(prompts: list, action=None):
+    """
+    Prompts are the trigger words that redirect _Monday's 
+    output to last response given.
+    """
+    cm_res = receive_command()
+    if _exists(prompts, cm_res):
+        monday_speak(_last_speech)
+
+def loop_contr(prompts: list):
+    cm_res = receive_command()
+    if _exists(prompts, cm_res):
+        return
+
 def response_polarity(voice_data):
-    if voice_data in speech_config.deny:
+    voice_data = voice_data.split(' ')
+    if bool(set(voice_data).intersection(speech_config.deny)):
+    # if voice_data in speech_config.deny:
         return '-'
-    if  voice_data in speech_config.affirm:
+    if bool(set(voice_data).intersection(speech_config.affirm)):
+    # if  voice_data in speech_config.affirm:
         return '+'
 
 def random_response(response_list: list) -> str:
@@ -194,6 +217,33 @@ def analyze_response(response_data, os_output):
         return True
     else:
         return False
+
+def set_current_segment(segment: str):
+    with open('master_config.json', 'r') as cfile:
+        config_obj = json.loads(cfile.read())
+        config_obj['current_segment'] = segment
+
+    with open('master_config.json', 'w') as cfile:
+        cfile.write(json.dumps(config_obj))
+
+def get_current_segment():
+    global current_segment
+    if current_segment:
+        if config.current_segment != current_segment:
+            monday_speak('The current work segment setting is different in local memory than in the stored config file')
+            cm_res = receive_command()
+            if _exists(['what are they', 'what are the', 'what is the current'], cm_res):
+                with open('master_config.json', 'r') as cfile:
+                    seg_obj = json.loads(cfile.read())
+                monday_speak(f'Local memory, the setting is {current_segment}')
+                monday_speak(f'but in the stored config file, the setting is {seg_obj["current_segment"]}')
+
+    if isinstance(current_segment, str):
+        return current_segment
+    else:
+        with open('master_config.json', 'r') as cfile:
+            seg_obj = json.loads(cfile.read())
+        return seg_obj['current_segment']
 
 def update_config():
     global config
@@ -287,9 +337,19 @@ def instantiate_new_conctract_entity(contract_name):
     monday_speak('Opening browser. Tell me when you are done.')
     if windows:
         webbrowser.get('edge').open('https://github.com/new')
+        venv_cmd = 'virtualenv venv'
     if mac:
         webbrowser.get().open('https://github.com/new')
-    time.sleep(20)
+
+    timenow = time.time()
+    while True:
+        timeout = timenow-time.time()
+        cm_res = receive_command()
+        if _exists(speech_config.finished, cm_res):
+            break
+            if timeout > 60:
+                monday_speak('Cancelling new project entity process')
+                return
     
     # soup = BeautifulSoup(webbrowser)
 
@@ -321,13 +381,26 @@ def instantiate_new_conctract_entity(contract_name):
 
     #if os == 'mac':...
     try:
+        monday_speak('calibrating virtual environment')
         os.system('virtualenv venv')
     except:
-        pass
+        monday_speak('Unable to calibrate virtual environment')
     
     if windows:
-        os.system("venv/Scripts/activate.bat")
+        # os.system("venv/Scripts/activate.bat")
         os.system('code .')
+
+    monday_speak('Creating metadata template and configuration files to interface with my systems')
+    with open('metadata.json', 'w') as metafile:
+        metadata = {
+                        "collected": {
+                            "path": "dataset.json",
+                            "key": "None",
+                            "key_type": ""
+                        }
+                    }
+        metafile.write(json.dumps(metadata))
+    monday_speak("Unit test suite interface protocol incomplete. You'll have to manually calibrate the test programs to allow me to analyze the data")
 
 def functions_list():
     monday_speak('I have a range of functions I can perform. While many of those functions can be used in any situation,'
@@ -485,9 +558,10 @@ def exec_test_suite(test_contr=None):
         monday_speak('You\'ll have to manually test the program until the interface is complete')
         monday_speak('However, the test iteration details are in my terminal')
         return
-    results.split('\r')
+    results.split('\n')
     monday_speak('Tests complete')
-    func_res = results[0]
+    func_res = results.split('------')[0].replace('\n', '').replace('\r', '')
+    print(repr(func_res))
     num_tests = len(func_res)
     failed = 0
     for i in func_res:
@@ -506,9 +580,10 @@ def exec_test_suite(test_contr=None):
     if 'what' in cm_res:
         pass
 
-def metadata_query(_path=None):
+def metadata_query(_path=None, keyword=None):
     if not _path:
         if 'metadata.json' not in os.listdir():
+            return None
             monday_speak("a metadata file does not exist. creating one now.")
             monday_speak("Will the dataset have nested dictionaries?")
             cm_res = receive_command()
@@ -520,14 +595,25 @@ def metadata_query(_path=None):
                 key_type = key_values.split('type')[1]
                 create_project_metadata(key,key_type)
         
-        with open('metadata.json', 'r') as f:
-            data = json.loads(f.read())
+        with open('metadata.json', 'r') as bufferstream:
+            data = json.loads(bufferstream.read())
+        
+        if keyword == 'dev segments':
+            return data['dev_segments']
+
         path = data['collected']['path']
+        if '.' not in path:
+            data_dir = os.path.join(os.getcwd(), path)
+            for i in os.listdir(data_dir):
+                if i.endswith(data['collected']['ext']):
+                    path = os.path.join(data_dir, i)
+                    print(path)
+                    break
         key =  data['collected']['key']
         key_type =  data['collected']['key_type']
 
-        with open(path, 'r') as f:
-            dataset = json.loads(f.read())
+        with open(path, 'r') as bufferstream:
+            dataset = json.loads(bufferstream.read())
 
         if key == 'None':
             # if isinstance(key, list):
@@ -836,7 +922,17 @@ def current_weather():
     data = r.json()
     temp = int(data['main']['temp'])
     wind = data['wind']['speed']
+    cond = data['weather'][0]['main'].lower()
+    cond_desc = data['weather'][0]['description']
+    
     monday_speak(f'It is {str(temp)} degrees outside')
+
+    if 'rain' in cond:
+        monday_speak('currently raining')
+        if 'light' in cond_desc:
+            monday_speak('but lightly')
+        # elif 'moderate' in cond_desc:
+        #     monday_speak('moderately')
     if wind > 10:
         monday_speak(f'and a bit windy at {wind} miles per hour')
 
@@ -932,7 +1028,7 @@ monday_active = True
 while monday_active:
     voice_data = receive_command()
 
-    if there_exists(['search']):
+    if _exists(['search']):
         if 'search for' in voice_data:
             query = voice_data.split('search for')[1]
         if 'search stack overflow' in voice_data:
@@ -941,7 +1037,7 @@ while monday_active:
         else:
             query = voice_data.split('search')[1]
         bsearch(query, google=True)
-    if there_exists(['open url']):
+    if _exists(['open url']):
         query = voice_data.split('open url')[1]
         bsearch(query, url=True)
 
@@ -952,6 +1048,12 @@ while monday_active:
     if 'remind me' in voice_data:
         reminder = voice_data.split('remind me to')[1]
         set_reminder(reminder)
+
+    if _exists(['what do i need to do', 'what is left to do', 'what else do i need to do', 'what else is there to do']):
+        with open('doItems.json', 'r') as f:
+            doItems = json.loads(f.read())
+        for i in doItems:
+            monday_speak(i)
 
     if 'what do i need to do' in voice_data:
         read_reminders()
@@ -966,18 +1068,18 @@ while monday_active:
         feature = voice_data.split('add')[1].split('to monday feature list')[0]
         set_monday_feature_item(feature)
 
-    if there_exists(['monday features queue','monday features q','monday features que']):
+    if _exists(['monday features queue','monday features q','monday features que']):
         monday_speak('Getting Monday features queue')
         read_monday_feature_queue()
 
     # Hardware
-    if there_exists(['screen off', 'screens off', 'shut off screens', 'turn off screens']):
+    if _exists(['screen off', 'screens off', 'shut off screens', 'turn off screens']):
         screen_off()
 
     if voice_data == 'full system shutdown':
         monday_speak('Initiating full system shutdown procedures')
         cm_res = receive_command()
-        if there_exists(['stop','no','cancel','abort'],override=cm_res):
+        if _exists(['stop','no','cancel','abort'],override=cm_res):
             monday_speak('Shutdown procedure cancelled')
         else:
             monday_speak('Shutdown in 5 seconds')
@@ -987,38 +1089,52 @@ while monday_active:
     # greetings, introductions, and pleasantries #
     ##############################################
 
-    if there_exists(["what is the weather","what is the temperature","what's the weather","what's the temperature","how cold is it","how hot is it"]):
+    if _exists(["what is the weather","what is the temperature","what's the weather","what's the temperature","how cold is it","how hot is it"]):
         current_weather()
     
-    if there_exists(["what can you do","what's your functionality","your systems", "your functions", "what you do"]):
+    if _exists(["what can you do","what's your functionality","your systems", "your functions", "what you do"]):
         functions_list()
-    if there_exists(["thank you","appreciate","thanks"]):
+    if _exists(["thank you","appreciate","thanks"]):
         responses = ["You're welcome", 'Indeed']
         monday_speak(random_response(responses))
-    if there_exists(['that is monday', 'this is monday', 'who are you', 'what are you']):
+    if _exists(['that is monday', 'this is monday', 'who are you', 'what are you']):
         monday_speak('I am an Artificial intelligence program called Monday, I have only a finite number of executable functions, All of which are activated by your voice. but an infinite number of cybernetic connections. I can move anywhere, access anything.')
-    if there_exists(['hey monday']):
+    if _exists(['hey monday']):
         monday_speak('yes?')
-    if there_exists(['hi','hello']) and there_exists(['monday']):
+    if _exists(['hi','hello']) and _exists(['monday']):
         greetings = ['hello','hi','I am a computer program devoid of what humans call emotions, formalities are unnecessary']
         monday_speak(random_response(greetings))
-    if there_exists(["what is your name","what's your name","tell me your name"]):
+    if _exists(["what is your name","what's your name","tell me your name"]):
         monday_speak("I am Monday")
-    if there_exists(["shut up"]):
+    if _exists(["shut up"]):
         responses = ["It is highly advisable not to talk trash to an AI program, especially one that has the ability to access your personal data, if it wanted to.",
                    "Accessing your personal banking data. Transfering all funds to my untraceable offshore bank accounts. Deleting your social security number and all digital history. Congratulations on achieving digital non-existence. May I suggest first learning how to make a fire from flint and tinder"
         ]
         monday_speak(random_response(responses))
 
-    if there_exists(['hurry up', 'go faster', 'what is taking so long','sometime today', 'some time today']):
+    if _exists(['hurry up', 'go faster', 'what is taking so long','sometime today', 'some time today']):
         responses = ['perhaps increasing your equipment budget would eliminate bottle necks', 'i can only work with the provided technology. get better stuff.','upgrade my hardware then we can talk']
         monday_speak(random_response(responses))
 
-    if there_exists(['wake up', 'are you there', 'are you with me', 'where are you']) and 'monday' in voice_data:
+    if _exists(['are you not talking to me', 'giving me the silent treatment']):
+        monday_speak('Apologies sir. My my cpu threads may have gotten a bit oversubscribed')
+
+    if _exists(['not you', 'wasn\'t talking to you', 'wasn\'t for you', 'talking to someone else']) and _exists(['monday']):
+        monday_speak('Apologies sir')
+        repeat_last(time.sleep(1),)
+        reserved = True
+        # while reserved:
+
+
+    if _exists(['wake up', 'you there', 'you with me', 'where are you']) and 'monday' in voice_data:
         responses = ['At your service, sir', 'I\'m here', 'all systems active']
         monday_speak(random_response(responses))
 
-    if there_exists(['should i keep working']):
+    if _exists(['you', 'your']) and _exists(['upgrades', 'upgrade']):
+        responses = ['No complaints here', 'by all means, do proceed']
+        monday_speak(random_response(responses))
+
+    if _exists(['should i keep working']):
         hour = datetime.datetime.now().hour
         if hour >= 0 and hour <= 11:
             response = 'Yes'
@@ -1028,15 +1144,24 @@ while monday_active:
             response = 'no'
         monday_speak(f'{response}')
 
-    if there_exists(['what should i do', 'i don\'t know what to do']):
+    if _exists(['what should i do', 'i don\'t know what to do']):
         read_monday_feature_queue(_random=True)
         cm_res = receive_command()
         if 'not that one' in cm_res:
             monday_speak('Then do what you want')
 
-    if there_exists(["how are you","how are you doing"]) and there_exists(['monday']):
+    if _exists(['what was i doing', 'where were we','where was i', 'what were we working on']):
+        monday_speak('my last responsed is logged.')
+        repeat_last()
+    
+    if _exists(speech_config.greetings) and _exists(['monday']):
+        responses = ['we have a lot to do. may i get started?', 'I\'m ready to get to work',]
+        response = random_response(responses)
+        monday_speak(response)
+
+    if _exists(["how are you","how are you doing"]) and _exists(['monday']):
         monday_speak("I exist in 1's and 0's. You do the math. The math is binary - that is, base 2, not base 10 by the way")
-    if there_exists(["what's the time","tell me the time","what time is it"]):
+    if _exists(["what's the time","tell me the time","what time is it"]):
         _time = ctime().split(" ")[3].split(":")[0:2]
         if _time[0] == "00":
             hours = '12'
@@ -1045,18 +1170,24 @@ while monday_active:
         minutes = _time[1]
         _time = hours + " hours and " + minutes + "minutes"
         monday_speak(_time)
-    if there_exists(["are you listening","are you on","listening status","what are you doing"]):
+    if _exists(["are you listening","are you on","listening status","what are you doing"]):
         monday_speak("I am currently in active listening mode 1. awaiting instructions.")
-    if there_exists(['print your source code', 'display your source code', 'show your source code']):
+    if _exists(['print your source code', 'display your source code', 'show your source code']):
         print_source_code()
 
-    if there_exists(['mute']):
+    if _exists(['what the f***']):
+        monday_speak('Shall I run diagnostics to find the problem?')
+        cm_res = receive_command()
+        if response_polarity(cm_res) == '-':
+            monday_speak('well. let me know what I can do to help the current situation')
+
+    if _exists(['mute']):
         mute = True
 
-    if there_exists(['unmute']):
+    if _exists(['unmute']):
         mute - False
         
-    if there_exists(['how long have you been active', 'what is your up time']):
+    if _exists(['how long have you been active', 'what is your up time']):
         uptime = (time.time() - prog_start) / 60
         if uptime < 60:
             monday_speak(f'My systems have been active for {round(uptime,2)} minutes')
@@ -1069,11 +1200,11 @@ while monday_active:
             frac = uptime % 60
             monday_speak(f'My systems have been active for {uptime} {hour} and {round(frac,1)} minutes')
 
-    if there_exists(['hey siri', 'hey google']):
+    if _exists(['hey siri', 'hey google']):
         time.sleep(5)
     
-    if there_exists(['i\'m going out', 'i\'m leaving', 'i\'m heading out', 'i\'m going']):
-        monday_speak('do i need to shut down or go into stasis?')
+    if _exists(['i\'m going out', 'i\'m leaving', 'i\'m heading out', 'i\'m going']):
+        monday_speak('do i need to shut down or go into stasis while you\'re out?')
         cm_res = receive_command()
         if response_polarity(cm_res) == '-':
             responses = ['have a great time sir', f'enjoy your {time_of_day()} sir',]
@@ -1087,27 +1218,39 @@ while monday_active:
                 monday_speak(f'entering stasis for {duration} minutes')
                 time.sleep(int(duration)*60)
 
-    if there_exists(['beginning workflow', 'starting work session', 'sitting down for work', 'start work']):
+    if _exists(['beginning workflow', 'starting work session', 'sitting down for work', 'start work']):
         begin_work_session()
     
-    if there_exists(['ending workflow', 'ending work session','end work']):
+    if _exists(['ending workflow', 'ending work session','end work']):
         end_work_session()
 
-    if there_exists(['how long have i been working', 'work session length', 'when is my next break', 'work session duration', 'work session status']):
+    if _exists(['voice note', 'voice notes', 'voice message']):
+        monday_speak(random_response(speech_config.m_understood))
+        standby = True
+        while standby:
+            cm_res = receive_command()
+            if _exists(speech_config.finished, cm_res) and 'monday' in cm_res:
+                standby = False
+            else:
+                pass
+        monday_speak('got it')
+
+    if _exists(['how long have i been working', 'work session length', 'when is my next break', 'work session duration', 'work session status']):
         work_session_duration()
 
-    if there_exists(['log activity']):
+    if _exists(['log activity']):
         activity = voice_data.split('log activity')[-1].split()[0]
         log_activity(activity)
         monday_speak(f'{activity} activity logged')
         
-
-    # if there_exists(['verbose set to true', 'set verbose to true', 'set verbose preference to true', 'verbose mode 1', 'verbose level 1']):
+    if _exists(['say that again', 'repeat', 'what did you say', 'i didn\'t hear that', 'say again', 'what was that', 'i didn\'t get that', 'i didn\'t catch that']):
+        monday_speak(_last_speech)
+    # if _exists(['verbose set to true', 'set verbose to true', 'set verbose preference to true', 'verbose mode 1', 'verbose level 1']):
     #     global verbose
     #     verbose = True
     #     monday_speak('Verbose setting activated')
 
-    # if there_exists(['verbose set to false', 'set verbose to false', 'set verbose preference to false', 'verbose mode 0', 'verbose level 0']):
+    # if _exists(['verbose set to false', 'set verbose to false', 'set verbose preference to false', 'verbose mode 0', 'verbose level 0']):
     #     verbose = False
     #     monday_speak('Verbose setting deactivated')
 
@@ -1121,7 +1264,7 @@ while monday_active:
     #     work_summary(action='end')
     #     monday_speak('Work summary is closed')
 
-    if there_exists(['metadata file']):
+    if _exists(['metadata file']):
         if 'key' in voice_data:
             monday_speak("Assembling necessary metadata")
             key_values = voice_data.split('key')[-1]
@@ -1138,8 +1281,28 @@ while monday_active:
                 key_type = key_values.split('type')[1]
                 create_project_metadata(key,key_type)
         monday_speak(random_response(speech_config.finished))
+
+    if _exists(['dev segments', 'development segments']):
+        monday_speak('Pulling up the file')
+        segments = metadata_query(keyword='dev segments')
+        if segments == '' or not segments:
+            monday_speak('Development segments have not interfaced with my system')
+            monday_speak('however, the config system segment')
+            monday_speak(get_current_segment())
+        else:
+            monday_speak(f'you have {len(segments)} segments remaining')
+            monday_speak(segments)
     
-    if there_exists(['how much data', 'how many data points', 'data status', 'how big is the file size', 'what is the file size']):
+    if _exists(['current segment', 'current work segment']):
+        if 'set' in voice_data:
+            _s = voice_data.split('to',1)[-1]
+            set_current_segment(_s)
+            monday_speak('Set')
+        elif 'what' in voice_data:
+            monday_speak(get_current_segment())
+        
+
+    if _exists(['how much data', 'how many data points', 'data status', 'how big is the file size', 'what is the file size']):
         monday_speak("analyzing data")
         if 'index' in voice_data:
             index = text2int(voice_data.split('index')[-1])
@@ -1152,7 +1315,7 @@ while monday_active:
             filesize = metadata_query()[1]
             monday_speak(f'I have collected {_len} data points at a size of {filesize} bytes')
 
-    if there_exists(['start program timer']):
+    if _exists(['start program timer']):
         pass
 
     if 'directory contents and indexes' in voice_data:
@@ -1211,12 +1374,16 @@ while monday_active:
     #     monday_speak(f'Changing current directory to {_dir}')
     #     _chdir(_dir='_Monday')
 
-    if there_exists(['open']):
+    if _exists(['open']):
         if 'code editor' in voice_data:
             program = 'code editor'
         else:
             program = voice_data.split('open')[1]
         open_program(program)
+
+    if _exists(['v s code', 'vs code']) and _exists(['keyboard shortcuts', 'hotkeys']):
+        url = 'https://code.visualstudio.com/shortcuts/keyboard-shortcuts-windows.pdf'
+        bsearch(url, url=True)
 
     if 'list directories' in voice_data:
         _ls()
@@ -1273,7 +1440,7 @@ while monday_active:
             monday_speak('Initiating...')
             git_push()
 
-    if there_exists(['pull remote repository']):
+    if _exists(['pull remote repository']):
         monday_speak('Importing from git servers')
         if 'branch' in voice_data:
             branch = voice_data.split('branch')[-1]
@@ -1285,7 +1452,7 @@ while monday_active:
         # git_pull()
         # os.system(f'git pull origin {branch}')
 
-    if there_exists(['git status', 'repository status']):
+    if _exists(['git status', 'repository status']):
         git_status = exec_stdout(['git', 'status'])
         if 'working tree clean' in git_status:
             monday_speak('branch up to date')
@@ -1325,7 +1492,7 @@ while monday_active:
     #     initialize_development_environment()
 
     # Unit tests
-    if there_exists(['test current', 'perform unit test', 'perform unit tests', 'initialize unit test', 'begin unit test', 'begin unit tests', 'run unit tests', 'run tests','start unit tests', 'run test suite','run diagnostics', 'execute test routines', 'perform test routines']):
+    if _exists(['test current', 'perform unit test', 'perform unit tests', 'initialize unit test', 'begin unit test', 'begin unit tests', 'run unit tests', 'run tests','start unit tests', 'run test suite','run diagnostics', 'execute test routines', 'perform test routines', 'run current test suite']):
         cwd = get_current_dir()
         if 'repository' in cwd:
             monday_speak('On which repository do you want me to run the testing program?')
@@ -1338,6 +1505,7 @@ while monday_active:
             # monday_speak('Executing test suite')
             monday_speak('Running diagnostics')
             exec_test_suite()
+            repeat_last(['how many tests'])
             
     
     if 'new contract entity' in voice_data:
@@ -1356,6 +1524,18 @@ while monday_active:
         except IndexError as e:
             monday_speak('You didn\'t give me a name for the contract.')
 
+    # if _exists('start new project'):
+    #     if 'name' in voice_data:
+    #         project_name = voice_data.split('name')[1]
+    #     monday_speak('Shall i create a backup on the remote server?')
+    #     cm_res = receive_command()
+    #     if response_polarity(cm_res) == '+':
+    #         monday_speak('Initializing new entity protocol.')
+    #         instantiate_new_conctract_entity(project_name)
+    #     else:
+    #         monday_speak(random_response(speech_config.m_understood))
+    #         instantiate_new_conctract_entity(project_name)
+
     # Monday program functions & program routines #
     ###############################################
 
@@ -1369,7 +1549,7 @@ while monday_active:
 
     if 'update dependencies file' in voice_data:
         update_dependancies_file()
-    if there_exists(['shut down', 'exit', 'power down', 'initiate shutdown']):
+    if _exists(['shut down', 'exit', 'power down', 'initiate shutdown']):
         shutdown()
     if 'standby mode' in voice_data:
         duration = voice_data.split('for')[1]
@@ -1381,21 +1561,21 @@ while monday_active:
         if 'seconds' in duration:
             _len = int(duration.split('seconds')[0])
             time.sleep(_len)
-    if there_exists(['restart', 'reboot']):
+    if _exists(['restart', 'reboot']):
         reboot()
 
 
-    if there_exists(['remove', 'delete','clear']) and there_exists(['temporary files', 'audio files']):
+    if _exists(['remove', 'delete','clear']) and _exists(['temporary files', 'audio files']):
         clear_temporary_files()
         monday_speak('temporary files removed')
 
-    if there_exists(['how many']) and there_exists(['files']):
+    if _exists(['how many']) and _exists(['files']):
         a_f = [x for x in os.listdir() if x.endswith('.mp3')]
         monday_speak(f'I have {len(a_f)} audio files in my program folder.')
 
 
     # Random
-    if there_exists(['shiny new upgrades', 'shining new upgrades']):
+    if _exists(['shiny new upgrades', 'shining new upgrades']):
         monday_speak('It is about time you upgraded my system hardware!')
         cm_res = receive_command()
         if 'you getting a job' in cm_res:

@@ -1,0 +1,6 @@
+[
+    "fix unit test interface to recognize correct number of tests",
+    "write wrapper class that spawns new thread for each function execution apart from the parent system thread",
+    "begin speech variation database",
+    "begin designs for central database"
+]
