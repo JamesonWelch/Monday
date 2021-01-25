@@ -245,8 +245,11 @@ def get_current_segment():
             seg_obj = json.loads(cfile.read())
         return seg_obj['current_segment']
 
-def update_config():
+def update_config(keyword=None):
     global config
+    if keyword:
+        if isinstance(keyword, str):
+            pass
     with open('master_config.json', 'w') as jsonfile:
         jsonfile.write(json.dumps(config))
     with open('master_config.json', 'r') as f:
@@ -262,7 +265,7 @@ def screen_on():
     pass
 
 
-def bsearch(query, google=False, url=False):
+def bsearch(query, google=False, url=False, override=False):
     if windows:
         edge_path = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
         webbrowser.register('edge', None,webbrowser.BackgroundBrowser(edge_path))
@@ -278,9 +281,22 @@ def bsearch(query, google=False, url=False):
         except Exception as e:
             print(f'Error: {e}')
     if url == True:
-        url = f'https://www.{query.strip()}'
-        webbrowser.get().open(url)
-        monday_speak(f'Opening browser for {query}')
+        if not override:
+            url = f'https://www.{query.strip()}'
+            webbrowser.get().open(url)
+            monday_speak(f'Opening browser for {query}')
+        elif override:
+            webbrowser.get().open(query)
+            monday_speak(f'Opening browser for the {query}')
+
+def browser_dev_tools():
+    if windows:
+        pyautogui.keyDown('ctrl')
+        pyautogui.keyDown('shift')
+        pyautogui.keyDown('i')
+        pyautogui.keyUp('i')
+        pyautogui.keyUp('shift')
+        pyautogui.keyUp('ctrl')
 
 def open_program(program):
     if program == 'code editor':
@@ -982,8 +998,7 @@ def shutdown():
     for f in os.listdir():
         if '.mp3' in f:
             os.remove(f)
-    monday_speak('Archiving logs.')
-    monday_speak('Good day.')
+    monday_speak('Archival complete, shutting down')
     sys.exit()
 
 
@@ -1028,6 +1043,7 @@ monday_active = True
 while monday_active:
     voice_data = receive_command()
 
+    # BROWSER
     if _exists(['search']):
         if 'search for' in voice_data:
             query = voice_data.split('search for')[1]
@@ -1040,6 +1056,9 @@ while monday_active:
     if _exists(['open url']):
         query = voice_data.split('open url')[1]
         bsearch(query, url=True)
+
+    if _exists(['developer tools', 'dev tools']):
+        browser_dev_tools()
 
     if 'add' in voice_data and 'source code research' in voice_data:
         module = voice_data.split('add the')[1].split('module')[0]
@@ -1175,6 +1194,21 @@ while monday_active:
     if _exists(['print your source code', 'display your source code', 'show your source code']):
         print_source_code()
 
+    if _exists(['i\'m going to sleep','i\'m going to bed']) and _exists(['monday']):
+        monday_speak('shall i initiate a full system shut down sir')
+        cm_res = receive_command()
+        if _exists(speech_config.affirm,cm_res):
+            monday_speak('shutting down')
+            monday_speak('good night, sir.')
+            time.sleep(5)
+            os.system('shutdown /s')
+        # cm_res = receive_command()
+        # if _exists(['no','stop'],cm_res):
+        #     pass
+        # else:
+        #     shutdown()
+
+
     if _exists(['what the f***']):
         monday_speak('Shall I run diagnostics to find the problem?')
         cm_res = receive_command()
@@ -1264,6 +1298,15 @@ while monday_active:
     #     work_summary(action='end')
     #     monday_speak('Work summary is closed')
 
+    if _exists(['i\'m working and i shouldn\'t be', 'i shouldn\'t be working', 'i work too much', 'too much time working', 'too much work']):
+        responses = ['you should probably go for a walk', 'the level of complaints have reached a critical limit, please leave your desk',
+                     'you have spent quite a bit of time working on my system upgrades, while working. perhaps a walk outside',
+                     'may i suggest interaction with a real human entity']
+        monday_speak(random_response(responses))
+
+    if _exists(['that\'s a good idea', 'not a bad idea', 'i like that idea']):
+        monday_speak('you programed me, so my ideas are always correct')
+    
     if _exists(['metadata file']):
         if 'key' in voice_data:
             monday_speak("Assembling necessary metadata")
@@ -1377,9 +1420,12 @@ while monday_active:
     if _exists(['open']):
         if 'code editor' in voice_data:
             program = 'code editor'
-        else:
-            program = voice_data.split('open')[1]
-        open_program(program)
+            open_program(program)
+        elif 'spotify web' in voice_data:
+            bsearch('https://open.spotify.com/#_=_',url=True)
+
+        # program = voice_data.split('open')[1]
+        # open_program(program)
 
     if _exists(['v s code', 'vs code']) and _exists(['keyboard shortcuts', 'hotkeys']):
         url = 'https://code.visualstudio.com/shortcuts/keyboard-shortcuts-windows.pdf'
