@@ -163,7 +163,7 @@ def monday_speak(audio_string):
         print(audio_string)
     if not mute:
         audio_string = str(audio_string)
-        tts = gTTS(text=audio_string, lang='en-gb')
+        tts = gTTS(text=audio_string, lang='en-UK')
         r = random.randint(1,20000000)
         audio_file = 'audio-' + str(r) + '.mp3'
         audio_file = os.path.join(ROOT_DIR, audio_file)
@@ -681,6 +681,18 @@ def source_code_research(module):
 # FS functions
 def get_current_dir() -> str:
     return os.path.split(os.getcwd())[-1]
+
+def clear_data_files():
+    for i in os.listdir():
+        if i.startswith('clear_') and i.endswith('.py'):
+            clear_prog = i
+            break
+    if i == None:
+        monday_active('the clear-data subroutines have not been set up to interface with my system. you\'ll have to manually clear the directory')
+        return False
+    
+    os.system(f'python {i}')
+    return True
 
 def _chdir(_dir=None, root_scope=False):
     if _dir:
@@ -1306,6 +1318,9 @@ while monday_active:
 
     if _exists(['that\'s a good idea', 'not a bad idea', 'i like that idea']):
         monday_speak('you programed me, so my ideas are always correct')
+
+    if _exists(['you are not wrong', 'you\'re not wrong']):
+        monday_speak('You programmed my entire system, so I\'m never wrong.')
     
     if _exists(['metadata file']):
         if 'key' in voice_data:
@@ -1343,6 +1358,11 @@ while monday_active:
             monday_speak('Set')
         elif 'what' in voice_data:
             monday_speak(get_current_segment())
+    
+    if _exists(['clear data files', 'clear data sets', 'clear datasets', 'delete all data files', 'clear all data files']) and _exists('monday'):
+        if clear_data_files():
+            responses = ['Done', 'all data files have been cleared out']
+            monday_speak(random_response(responses))
         
 
     if _exists(['how much data', 'how many data points', 'data status', 'how big is the file size', 'what is the file size']):
@@ -1375,7 +1395,7 @@ while monday_active:
             _chdir(_dir='_Monday')
         elif 'index' in voice_data:
             index_src = True
-            _index = voice_data.split('index')[1]
+            _index = voice_data.split('index')[1].split()[0]
             if 'for' in _index:
                 _index = 4
             try:
@@ -1386,6 +1406,7 @@ while monday_active:
             except Exception as e:
                 print(e)
                 monday_speak(f'I didn\'t hear the directory index')
+
         elif 'repository' in _dir:
             monday_speak(f'Changing cursor to the in-scope root directory')
             _chdir(root_scope=True)

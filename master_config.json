@@ -1,1 +1,14 @@
-{"git": {"repository": {"_Monday": {"origin": "master"}}}, "current_segment": " using sql light database and local folder to store states"}
+{"git": {
+    "repository": {
+        "_Monday": {
+            "origin": "master"
+            }
+        }
+    }, 
+    "current_segment": " using sql light database and local folder to store states",
+    "circleCi": {
+        "api": {
+            "token": "daa3226bd1fe76a98c9903ff9c3e93c6d271a966"
+        }
+    }
+}
