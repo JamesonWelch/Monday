@@ -287,7 +287,6 @@ def bsearch(query, google=False, url=False, override=False):
             monday_speak(f'Opening browser for {query}')
         elif override:
             webbrowser.get().open(query)
-            monday_speak(f'Opening browser for the {query}')
 
 def browser_dev_tools():
     if windows:
@@ -1108,11 +1107,12 @@ while monday_active:
         screen_off()
 
     if voice_data == 'full system shutdown':
-        monday_speak('Initiating full system shutdown procedures')
+        monday_speak('Initiating full system shutdown protocol')
         cm_res = receive_command()
         if _exists(['stop','no','cancel','abort'],override=cm_res):
             monday_speak('Shutdown procedure cancelled')
         else:
+            monday_speak('deactivating virtual environments')
             monday_speak('Shutdown in 5 seconds')
             time.sleep(5)
             os.system('shutdown /s')
@@ -1443,7 +1443,10 @@ while monday_active:
             program = 'code editor'
             open_program(program)
         elif 'spotify web' in voice_data:
-            bsearch('https://open.spotify.com/#_=_',url=True)
+            bsearch('https://open.spotify.com/#_=_',url=True, ovverride=True)
+        elif 'ci server':
+            monday_speak('Opening the continuous integration server dashboard in the browser')
+            bsearch('https://app.circleci.com/pipelines/github/JamesonWelch',url=True, ovverride=True)
 
         # program = voice_data.split('open')[1]
         # open_program(program)
