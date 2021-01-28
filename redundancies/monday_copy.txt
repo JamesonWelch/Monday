@@ -1446,7 +1446,7 @@ while monday_active:
             bsearch('https://open.spotify.com/#_=_',url=True, ovverride=True)
         elif 'ci server':
             monday_speak('Opening the continuous integration server dashboard in the browser')
-            bsearch('https://app.circleci.com/pipelines/github/JamesonWelch',url=True, ovverride=True)
+            bsearch('https://app.circleci.com/pipelines/github/JamesonWelch',url=True, override=True)
 
         # program = voice_data.split('open')[1]
         # open_program(program)
