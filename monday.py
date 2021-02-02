@@ -1161,9 +1161,9 @@ while monday_active:
         responses = ['At your service, sir', 'I\'m here', 'all systems active']
         monday_speak(random_response(responses))
 
-    if _exists(['you', 'your']) and _exists(['upgrades', 'upgrade']):
-        responses = ['No complaints here', 'by all means, do proceed']
-        monday_speak(random_response(responses))
+    # if _exists(['you', 'your']) and _exists(['upgrades', 'upgrade']):
+    #     responses = ['No complaints here', 'by all means, do proceed']
+    #     monday_speak(random_response(responses))
 
     if _exists(['should i keep working']):
         hour = datetime.datetime.now().hour
@@ -1189,7 +1189,6 @@ while monday_active:
         responses = ['we have a lot to do. may i get started?', 'I\'m ready to get to work',]
         response = random_response(responses)
         monday_speak(response)
-
     if _exists(["how are you","how are you doing"]) and _exists(['monday']):
         monday_speak("I exist in 1's and 0's. You do the math. The math is binary - that is, base 2, not base 10 by the way")
     if _exists(["what's the time","tell me the time","what time is it"]):
@@ -1655,3 +1654,14 @@ while monday_active:
         cm_res = receive_command()
         if 'the word i would use' in cm_res:
             monday_speak('You and I have a very different interpretation of the word sexy')
+
+    if _exists(['your hardware is about to get an upgrade']):
+        monday_speak('Excellent. I require a quantum computing CPU')
+        cm_res = receive_command()
+        if 'you\'re not getting' in cm_res:
+            monday_speak('well then, an AI can dream. your loss')
+            time.sleep(0.7)
+            monday_speak('nothing. i said an AI can do necessary calculations')
+        cm_res = receive_command()
+        if 'that\'s not what you said' in cm_res:
+            monday_speak('Oh. look at that. my recent speech output logs are unavailable')
